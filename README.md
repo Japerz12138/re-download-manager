@@ -6,6 +6,11 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 In the project directory, you can run:
 
+## [READ THIS]Start Re Download Manger
+First, use `npm start`
+Then, run `npm run rdm-server`,
+This will show the desktop version created by electron.
+
 ### `npm start`
 
 Runs the app in the development mode.\

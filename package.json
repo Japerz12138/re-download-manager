@@ -2,6 +2,9 @@
   "name": "re-download-manager",
   "version": "0.1.0",
   "private": true,
+  "productName": "Re Download Manager",
+  "main": "public/electron.js",
+  "homepage": "./",
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -15,7 +18,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "rdm-server": "export ELECTRON_START_URL=http://localhost:3000 && electron .",
+    "rdm-build": "electron-builder build --mac --win -c.extraMetadata.main=build/electron.js --publish never",
+    "rdm-publish": "electron-builder build --mac --win --publish always"
   },
   "eslintConfig": {
     "extends": [
@@ -34,5 +40,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4"
   }
 }
