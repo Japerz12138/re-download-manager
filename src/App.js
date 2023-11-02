@@ -4,21 +4,34 @@ import './App.css';
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <h1>Welcome to RDM</h1>
-        <p>
-          Edit <code>src/App.js</code> and save to reload!
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+      <header className="header">
+        <div class="field is-grouped">
+          <p class="control">
+            <button class="button is-rounded">
+              Active
+            </button>
+          </p>
+          <p class="control">
+            <button class="button is-rounded">
+              Inactive
+            </button>
+          </p>
+          <p class="control">
+            <button class="button is-rounded">
+              Settings
+            </button>
+          </p>
+        </div>
       </header>
+      <body className="body">
+        <div class="card">
+          <div class="card-content">
+            <div class="content">
+              <progress class="progress is-primary" value="15" max="100">15%</progress>
+            </div>
+          </div>
+        </div>
+      </body>
     </div>
   );
 }
