@@ -7,17 +7,17 @@ function App() {
       <header className="header">
         <div class="field is-grouped">
           <p class="control">
-            <button class="button is-rounded">
+            <button class="button">
               Active
             </button>
           </p>
           <p class="control">
-            <button class="button is-rounded">
+            <button class="button is-ghost">
               Inactive
             </button>
           </p>
           <p class="control">
-            <button class="button is-rounded">
+            <button class="button is-ghost">
               Settings
             </button>
           </p>
@@ -27,7 +27,7 @@ function App() {
         <div class="card">
           <div class="card-content">
             <div class="content">
-              <progress class="progress is-primary" value="15" max="100">15%</progress>
+              <progress class="progress is-small is-primary" value="15" max="100">15%</progress>
             </div>
           </div>
         </div>

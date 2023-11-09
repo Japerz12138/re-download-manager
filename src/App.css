@@ -2,6 +2,11 @@
   text-align: center;
 }
 
+::-webkit-scrollbar { 
+  /* width: 0px;  */
+  display: none;
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;
@@ -30,8 +35,8 @@
   top: 0;
   left: 0;
   right: 0;
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
   padding: 20px; 
   display: flex;
   justify-content: flex-start; 
@@ -42,7 +47,6 @@
 .body {
   padding: 20px;
   position: relative;
-  
 }
 
 .card {
@@ -67,4 +71,25 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.button.is-ghost
+{
+    background:0 0;
+    border-color:transparent;
+    color:#FFFFFF;
+    text-decoration:none;
+}
+    
+.button.is-ghost.is-hovered
+{
+    border-color:transparent;
+}
+
+.button.is-ghost:hover
+{
+    background:hsl(0, 0%, 100%, 0.3);
+    border-color:transparent;
+    color:#FFFFFF;
+    text-decoration:none;
 }
