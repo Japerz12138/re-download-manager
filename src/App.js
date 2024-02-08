@@ -25,10 +25,39 @@ function App() {
       </header>
       <body className="body">
         <div class="card">
+          <header class="card-header">
+            <p class="card-header-title">
+              Minecraft.zip
+            </p>
+            <button class="card-header-icon" aria-label="more options">
+              <span class="icon">
+                <i class="fas fa-angle-down" aria-hidden="true"></i>
+              </span>
+            </button>
+          </header>
           <div class="card-content">
             <div class="content">
-              <progress class="progress is-small is-primary" value="15" max="100">15%</progress>
+              <nav class="level is-mobile">
+                <div class="column">
+                  <div class="columns is-mobile">
+
+                    <div class="column">
+                      <progress class="progress is-small is-info" value="15" max="100">
+                        15%
+                      </progress>
+                    </div>
+                    <div class="column level-right">
+                      <p>15% (21.1 MB / 233 MB)</p>
+                    </div>
+                  </div>
+                </div>
+              </nav>
             </div>
+          </div>
+          <div class="buttons level-right">
+            <button class="button is-info is-light">Start</button>
+            <button class="button is-warning is-light">Pause</button>
+            <button class="button is-danger is-light">Delete</button>
           </div>
         </div>
       </body>
