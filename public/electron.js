@@ -12,6 +12,7 @@ function createWindow() {
         height: 500,
         resizable: false,
         frame: true,
+        autoHideMenuBar: true,
         webPreferences: {
             nodeIntegration: true
         }
