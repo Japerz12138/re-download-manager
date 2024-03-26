@@ -3,24 +3,31 @@
   "version": "0.1.0",
   "private": true,
   "productName": "Re Download Manager",
-  "main": "public/electron.js",
+  "main": "src/electron.js",
   "homepage": "./",
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.6.8",
+    "bluebird": "^3.7.2",
+    "bootstrap": "^5.3.3",
+    "electron-is-dev": "^3.0.1",
+    "file-saver": "^2.0.5",
     "react": "^18.2.0",
+    "react-bootstrap": "^2.10.2",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "react-start": "react-scripts start",
+    "start": "concurrently \"npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "rdm-server": "export ELECTRON_START_URL=http://localhost:3000 && electron .",
-    "rdm-build": "electron-builder build --mac --win -c.extraMetadata.main=build/electron.js --publish never",
+    "rdm-build": "electron-builder build --mac --win -c.extraMetadata.main=build/main.js --publish never",
     "rdm-publish": "electron-builder build --mac --win --publish always"
   },
   "eslintConfig": {
@@ -42,7 +49,7 @@
     ]
   },
   "devDependencies": {
-    "electron": "^27.0.0",
+    "electron": "^27.3.7",
     "electron-builder": "^24.6.4"
   }
 }
