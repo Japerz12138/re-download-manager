@@ -11,7 +11,24 @@
  */
 import React from 'react';
 
+function formatFileSize(bytes) {
+  if (bytes < 1024) {
+    return bytes + ' B';
+  } else if (bytes < 1024 * 1024) {
+    return (bytes / 1024).toFixed(2) + ' KB';
+  } else if (bytes < 1024 * 1024 * 1024) {
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  } else if (bytes < 1024 * 1024 * 1024 * 1024) {
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+  } else {
+    return (bytes / (1024 * 1024 * 1024 * 1024)).toFixed(2) + ' TB';
+  }
+}
+
 function DownloadProgress({ progress, fileName, fileSize, speed, eta }) {
+  const roundedProgress = Math.round(progress);
+  const formattedFileSize = formatFileSize(parseInt(fileSize));
+
   return (
     <div className="card-body text-start shadow" style={{ borderRadius: '12px', borderTopLeftRadius: '-1px', opacity: '1', borderColor: 'rgb(0,128,255)', marginBottom: '18px' }}>
       <div className="row">
@@ -20,7 +37,7 @@ function DownloadProgress({ progress, fileName, fileSize, speed, eta }) {
             {/* SVG path for file type icon*/}
           </svg>
           <h4 style={{ marginTop: '-28px', paddingRight: '0px', paddingLeft: '0px', marginLeft: '35px', marginRight: '0px' }}>{fileName}</h4>
-          <h6 className="text-muted mb-2" style={{ fontSize: '13px' }}>{fileSize} ({speed} MB/s)</h6>
+          <h6 className="text-muted mb-2" style={{ fontSize: '13px' }}>{formattedFileSize} ({speed} MB/s)</h6>
         </div>
         <div className="col text-end">
           <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px' }}>
@@ -38,7 +55,7 @@ function DownloadProgress({ progress, fileName, fileSize, speed, eta }) {
       <div className="row">
         <div className="col">
           <div className="progress" style={{ borderRadius: '68px' }}>
-            <div className="progress-bar progress-bar-striped progress-bar-animated" aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100" style={{ width: `${progress}%` }}>{progress}%</div>
+            <div className="progress-bar progress-bar-striped progress-bar-animated" aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100" style={{ width: `${progress}%` }}>{roundedProgress}%</div>
           </div>
         </div>
       </div>

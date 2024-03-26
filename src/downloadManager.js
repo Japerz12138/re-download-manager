@@ -99,8 +99,12 @@ async function downloadFile(url, onProgress, id, numShards = 4) {
     });
     const tempFilePaths = await Promise.all(promises);
 
-    const downloadFilePath = path.join(__dirname, 'downloads', fileName);
+    // const downloadFilePath = path.join(__dirname, 'downloads', fileName);
+    // const downloadFileStream = fs.createWriteStream(downloadFilePath);
+    const downloadFolderPath = path.join(os.homedir(), 'Downloads');
+    const downloadFilePath = path.join(downloadFolderPath, fileName);
     const downloadFileStream = fs.createWriteStream(downloadFilePath);
+
 
     for (const [i, tempFilePath] of tempFilePaths.entries()) {
       const tempFileStream = fs.createReadStream(tempFilePath);
