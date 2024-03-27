@@ -11,6 +11,27 @@
  */
 import React from 'react';
 
+function getFileIcon(fileName) {
+  const lastDotIndex = fileName.lastIndexOf('.');
+  if (lastDotIndex === -1) {
+    return <i className="bi bi-file-earmark"></i>; // No file extension found
+  }
+  const extension = fileName.substring(lastDotIndex + 1).toLowerCase(); // Get the file extension
+  switch (extension) {
+    case 'png':
+    case 'jpg':
+    case 'jpeg':
+      return <i className="bi bi-file-earmark-image"></i>; // Bootstrap icon for image files
+    case 'pdf':
+      return <i className="bi bi-file-earmark-pdf"></i>; // Bootstrap icon for PDF files
+    case 'exe':
+      return <i className="bi bi-filetype-exe"></i>; // Bootstrap icon for executable files
+    default:
+      return <i className="bi bi-file-earmark"></i>; // Default icon if no match is found
+  }
+}
+
+
 function formatFileSize(bytes) {
   if (bytes < 1024) {
     return bytes + ' B';
@@ -28,14 +49,13 @@ function formatFileSize(bytes) {
 function DownloadProgress({ progress, fileName, fileSize, speed, eta }) {
   const roundedProgress = Math.round(progress);
   const formattedFileSize = formatFileSize(parseInt(fileSize));
+  const fileIcon = getFileIcon(fileName);
 
   return (
     <div className="card-body text-start shadow" style={{ borderRadius: '12px', borderTopLeftRadius: '-1px', opacity: '1', borderColor: 'rgb(0,128,255)', marginBottom: '18px' }}>
       <div className="row">
         <div className="col-md-8 col-lg-7">
-          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" className="bi bi-filetype-exe" style={{ fontSize: '27px' }}>
-            {/* SVG path for file type icon*/}
-          </svg>
+        {fileIcon}
           <h4 style={{ marginTop: '-28px', paddingRight: '0px', paddingLeft: '0px', marginLeft: '35px', marginRight: '0px' }}>{fileName}</h4>
           <h6 className="text-muted mb-2" style={{ fontSize: '13px' }}>{formattedFileSize} ({speed} MB/s)</h6>
         </div>
