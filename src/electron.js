@@ -14,8 +14,8 @@ function createWindow() {
   });
 
   const win = new BrowserWindow({
-    width: 1920,
-    height: 1080,
+    width: 800,
+    height: 500,
     resizable: false,
     frame: true,
     autoHideMenuBar: true,
@@ -27,7 +27,7 @@ function createWindow() {
   });
 
   win.loadURL(startUrl);
-  win.webContents.openDevTools(); 
+  // win.webContents.openDevTools(); 
 
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {

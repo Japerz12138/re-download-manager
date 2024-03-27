@@ -21,16 +21,15 @@ function getFileIcon(fileName) {
     case 'png':
     case 'jpg':
     case 'jpeg':
-      return <i className="bi bi-file-earmark-image"></i>; // Bootstrap icon for image files
+      return <i className="bi bi-file-earmark-image" style={{ 'font-size': '1.5rem' }}></i>;
     case 'pdf':
-      return <i className="bi bi-file-earmark-pdf"></i>; // Bootstrap icon for PDF files
+      return <i className="bi bi-file-earmark-pdf" style={{ 'font-size': '1.5rem' }}></i>;
     case 'exe':
-      return <i className="bi bi-filetype-exe"></i>; // Bootstrap icon for executable files
+      return <i className="bi bi-filetype-exe" style={{ 'font-size': '1.5rem' }}></i>;
     default:
-      return <i className="bi bi-file-earmark"></i>; // Default icon if no match is found
+      return <i className="bi bi-file-earmark" style={{ 'font-size': '1.5rem' }}></i>;
   }
 }
-
 
 function formatFileSize(bytes) {
   if (bytes < 1024) {
@@ -46,16 +45,29 @@ function formatFileSize(bytes) {
   }
 }
 
+function formatETA(etaInSeconds) {
+  if (etaInSeconds < 60) {
+    return `${etaInSeconds} s`;
+  } else if (etaInSeconds < 3600) {
+    const minutes = Math.floor(etaInSeconds / 60);
+    return `${minutes} min`;
+  } else {
+    const hours = Math.floor(etaInSeconds / 3600);
+    return `${hours} hr`;
+  }
+}
+
 function DownloadProgress({ progress, fileName, fileSize, speed, eta }) {
   const roundedProgress = Math.round(progress);
   const formattedFileSize = formatFileSize(parseInt(fileSize));
+  const formattedETA = formatETA(parseInt(eta));
   const fileIcon = getFileIcon(fileName);
 
   return (
     <div className="card-body text-start shadow" style={{ borderRadius: '12px', borderTopLeftRadius: '-1px', opacity: '1', borderColor: 'rgb(0,128,255)', marginBottom: '18px' }}>
       <div className="row">
         <div className="col-md-8 col-lg-7">
-        {fileIcon}
+          {fileIcon}
           <h4 style={{ marginTop: '-28px', paddingRight: '0px', paddingLeft: '0px', marginLeft: '35px', marginRight: '0px' }}>{fileName}</h4>
           <h6 className="text-muted mb-2" style={{ fontSize: '13px' }}>{formattedFileSize} ({speed} MB/s)</h6>
         </div>
@@ -75,11 +87,27 @@ function DownloadProgress({ progress, fileName, fileSize, speed, eta }) {
       <div className="row">
         <div className="col">
           <div className="progress" style={{ borderRadius: '68px' }}>
-            <div className="progress-bar progress-bar-striped progress-bar-animated" aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100" style={{ width: `${progress}%` }}>{roundedProgress}%</div>
+            {/* Now when progress hits 100%, it will turns green and disable the animated progress bar. */}
+            <div className={`progress-bar ${progress === 100 ? 'bg-success' : 'progress-bar-striped progress-bar-animated'}`} aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100" style={{ width: `${progress}%` }}>{roundedProgress}%</div>
           </div>
+
+          {/* For Ethan */}
+          
+          {/* Error Progress Bar */}
+          {/* <div class="progress" style={{ 'border-radius': '68px' }}>
+            <div class="progress-bar bg-danger progress-bar-striped" aria-valuenow="73" aria-valuemin="0" aria-valuemax="100" style={{ 'width': '73%' }}>73%</div>
+          </div> */}
+
+          {/* Paused Progress Bar */}
+          {/* <div class="progress" style={{ 'border-radius': '68px' }}>
+            <div class="progress-bar progress-bar-striped progress-bar-animated" aria-valuenow="6" aria-valuemin="0" aria-valuemax="100" style={{ 'width': '6%' }}>6%</div>
+          </div> */}
+
         </div>
       </div>
-      <h6 className="text-end text-muted card-subtitle mb-2" style={{ fontSize: '13px', marginTop: '6px', marginBottom: '5px', paddingBottom: '0px' }}>ETA {eta}</h6>
+
+
+      <h6 className="text-end text-muted card-subtitle mb-2" style={{ fontSize: '13px', marginTop: '6px', marginBottom: '5px', paddingBottom: '0px' }}>ETA {formattedETA}</h6>
     </div>
   );
 }

@@ -5,12 +5,9 @@
 import React from 'react';
 
 function Navbar() {
-  const navstyle = {
-    // todo - ethan
-  };
 
   return (
-    <nav className="navbar navbar-expand-md bg-primary shadow py-3" style={navstyle}>
+    <nav className="navbar navbar-expand-md bg-primary shadow py-3">
       <div className="container">
         <a className="navbar-brand d-flex align-items-center" href="#"><span></span></a>
         <button data-bs-toggle="collapse" className="navbar-toggler" data-bs-target="#navcol-1">
