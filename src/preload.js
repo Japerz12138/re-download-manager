@@ -15,7 +15,19 @@ contextBridge.exposeInMainWorld(
      * @param {string} url - The URL of the file to download.
      * @param {number} id - The unique identifier for the download.
      */
-    startDownload: (url, id) => ipcRenderer.send('start-download', url, id),
+    startDownload: (url, id) => {
+      console.log(`startDownload called with id: ${id}`);
+      ipcRenderer.send('start-download', url, id);
+    },
+
+    /**
+     * Sends a message to the main process to cancel a download.
+     * @param {number} id - The unique identifier for the download.
+     */
+    cancelDownload: (id) => {
+      console.log(`cancelDownload called with id: ${id}`);
+      ipcRenderer.send('cancel-download', id);
+    },
 
     /**
      * Registers a callback function to be called when download progress is received for a specific download.

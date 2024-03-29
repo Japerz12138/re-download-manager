@@ -1,5 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
-const { downloadFile } = require('./downloadManager');
+const { downloadFile, cancelDownload } = require('./downloadManager');
 const path = require('path');
 const url = require('url');
 
@@ -27,7 +27,7 @@ function createWindow() {
   });
 
   win.loadURL(startUrl);
-  // win.webContents.openDevTools(); 
+  
 
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
@@ -59,5 +59,9 @@ app.on('activate', () => {
 ipcMain.on('start-download', (event, url, id) => {
   downloadFile(url, (downloadInfo) => {
     event.sender.send('download-progress', { ...downloadInfo, id });
-  });
+  }, id);
+});
+
+ipcMain.on('cancel-download', (event, id) => {
+  cancelDownload(id);
 });

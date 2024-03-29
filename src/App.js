@@ -33,10 +33,15 @@ function App() {
 
   const handleDownload = () => {
     if (newUrl.trim()) {
+      console.log(`Adding new URL: ${newUrl.trim()}`);
       setUrls(prevUrls => [...prevUrls, newUrl.trim()]);
       setNewUrl('');
       setShowModal(false);
     }
+  };
+
+  const removeUrl = (url) => {
+    setUrls(prevUrls => prevUrls.filter(u => u !== url));
   };
 
   return (
@@ -55,7 +60,7 @@ function App() {
                   <p className="text-muted">Press + to start a download</p>
                 </div>
               )}
-              {urls.map((url) => <DownloadComponent key={url} url={url} />)}
+      {urls.map((url) => <DownloadComponent key={url} url={url} removeUrl={removeUrl} />)}
             </div>
           </div>
         </div>

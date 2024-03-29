@@ -52,7 +52,7 @@
   "devDependencies": {
     "concurrently": "^8.2.2",
     "electon": "^0.0.1-security",
-    "electron": "^27.3.7",
+    "electron": "^27.3.8",
     "electron-builder": "^24.6.4"
   }
 }
