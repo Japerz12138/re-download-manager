@@ -34,6 +34,17 @@ function createWindow() {
       app.quit();
     }
   });
+
+  const fs = require('fs');
+  const tempPath = './src/temp';
+
+  if (!fs.existsSync(tempPath)) {
+    fs.mkdirSync(tempPath);
+    console.log(`Folder ${tempPath} created successfully.`);
+} else {
+    console.log(`Folder ${tempPath} already exists. Skipping.`);
+}
+
 }
 
 app.whenReady().then(createWindow);
