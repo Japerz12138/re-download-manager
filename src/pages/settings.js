@@ -1,4 +1,6 @@
-export const SettingsPage = () => {
+import React from 'react';
+
+function Settings() {
     return (
         <div className="Settings">
             <body>
@@ -45,7 +47,7 @@ export const SettingsPage = () => {
                                             </svg>Speed Limit</h4>
                                             <h6 class="text-muted mb-2" style={{ 'margin-bottom': '-11px', 'margin-top': '-4px' }}>Limit the download speed of individual files. (Set "0" to disable this function)</h6>
                                         </div>
-                                        <div class="col-xl-5" style={{ 'text-align': 'right', 'margin-top': '10px' }}><input type="text" style={{ 'padding-left': '0px', 'text-align': 'right' }} placeholder="0"/><small style={{ 'margin-left': '10px' }}>KB/s</small></div>
+                                        <div class="col-xl-5" style={{ 'text-align': 'right', 'margin-top': '10px' }}><input type="text" style={{ 'padding-left': '0px', 'text-align': 'right' }} placeholder="0" /><small style={{ 'margin-left': '10px' }}>KB/s</small></div>
                                     </div>
                                 </div>
                                 <div class="row text-center">
@@ -62,3 +64,4 @@ export const SettingsPage = () => {
         </div>
     );
 }
+export default Settings;
