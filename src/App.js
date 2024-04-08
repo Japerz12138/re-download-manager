@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
 import Navbar from './Navbar';
 import DownloadComponent from './components/DownloadComponent';
+import Settings from './pages/settings';
 import { Button, Modal } from 'react-bootstrap';
 
-function App() {
+function HomePage() {
   const [urls, setUrls] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [newUrl, setNewUrl] = useState('');
@@ -46,8 +48,6 @@ function App() {
 
   return (
     <div className="App">
-      <Navbar />
-
       <div class="container" style={{ 'margin-top': '100px' }}>
         <div class="row">
           <div class="col">
@@ -87,6 +87,18 @@ function App() {
         </Modal.Footer>
       </Modal>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/settings" element={<Settings />} />
+      </Routes>
+    </Router>
   );
 }
 
