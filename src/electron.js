@@ -16,6 +16,7 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 800,
     height: 500,
+    icon: path.join(__dirname, '../public/favicon.ico'),
     resizable: false,
     frame: true,
     autoHideMenuBar: true,

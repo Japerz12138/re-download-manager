@@ -4,6 +4,7 @@
   "private": true,
   "productName": "Re Download Manager",
   "main": "src/electron.js",
+  "icon": "public/favicon.ico",
   "homepage": "./",
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",

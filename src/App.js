@@ -41,7 +41,6 @@ function HomePage() {
       setShowModal(false);
     }
   };
-
   const removeUrl = (url) => {
     setUrls(prevUrls => prevUrls.filter(u => u !== url));
   };

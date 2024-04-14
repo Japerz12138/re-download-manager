@@ -5,6 +5,10 @@ const os = require('os');
 const { promisify } = require('util');
 const stream = require('stream');
 const pipeline = promisify(stream.pipeline);
+const { Notification, app } = require('electron');
+
+//Get the app name
+app.on('ready', () => app.setAppUserModelId(app.name));
 
 class ProgressStream extends stream.Transform {
   constructor(onProgress, partSize, id) {
@@ -129,7 +133,7 @@ async function downloadFile(url, onProgress, id, numShards = 4) {
       console.log(`Processing shard ${i} for download ${id}`);
       const tempFileStream = fs.createReadStream(tempFilePath);
       downloads[id].streams.push(tempFileStream);
-    
+
       await new Promise((resolve, reject) => {
         pipeline(tempFileStream, downloadFileStream, { end: false })
           .then(() => {
@@ -152,13 +156,14 @@ async function downloadFile(url, onProgress, id, numShards = 4) {
         downloadFileStream.on('finish', resolve);
       });
     }
-    
+
     if (!downloads[id].isCancelled) {
       console.log(`Writing final file for download ${id}`);
       downloadFileStream.end();
-    
+      
       await new Promise((resolve) => downloadFileStream.on('finish', () => {
         console.log('Final file written');
+        showNotification('Donwload Complete', fileName + ' has been downloaded.');
         resolve();
       }));
     } else {
@@ -169,6 +174,7 @@ async function downloadFile(url, onProgress, id, numShards = 4) {
 
     await new Promise((resolve) => downloadFileStream.on('finish', () => {
       console.log('Final file written');
+      showNotification('Donwload Complete', fileName + ' has been downloaded.');
       resolve();
     }));
 
@@ -182,6 +188,13 @@ async function downloadFile(url, onProgress, id, numShards = 4) {
   } catch (error) {
     console.error('Failed to download file:', error);
   }
+}
+
+showNotification = ($title, $body) => {
+  new Notification({
+    title: $title,
+    body: $body
+  }).show()
 }
 
 async function cancelDownload(id) {
