@@ -4,6 +4,7 @@ import './App.css';
 import Navbar from './Navbar';
 import DownloadComponent from './components/DownloadComponent';
 import Settings from './pages/settings';
+import History from './pages/history';
 import { Button, Modal } from 'react-bootstrap';
 
 function HomePage() {
@@ -95,6 +96,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/history" element={<History />}/>
         <Route path="/settings" element={<Settings />} />
       </Routes>
     </Router>
