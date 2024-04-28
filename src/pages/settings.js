@@ -5,27 +5,17 @@ function Settings() {
     const [selectedDirectoryPath, setSelectedDirectoryPath] = useState('');
     const fileInputRef = useRef(null);
 
-    useEffect(() => {
-        const script = document.createElement('script');
-        script.src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js";
-        script.integrity = "sha384-...";
-        script.crossOrigin = "anonymous";
-        document.body.appendChild(script);
-        return () => {
-            document.body.removeChild(script);
-        };
-    }, []);
-
     const handleDirectoryChange = (event) => {
         const files = event.target.files;
         if (files.length > 0) {
             const selectedDirectory = files[0];
-            setSelectedDirectoryPath(selectedDirectory.webkitRelativePath);
-            console.log(selectedDirectory.webkitRelativePath);
+            setSelectedDirectoryPath(selectedDirectory.path.split(selectedDirectory.name)[0]);
+            console.log(selectedDirectory.path);
         }
     };
 
-    const openDirectorySelector = () => {
+    const openDirectorySelector = (event) => {
+        event.preventDefault();
         fileInputRef.current.click();
     };
 
@@ -70,6 +60,7 @@ function Settings() {
                                     </div>
                                 </div>
                             </div>
+
                             <div className="card-body text-start shadow" style={{ borderRadius: '12px', borderTopLeftRadius: '-1px', opacity: '1', borderColor: 'rgb(0,128,255)', marginBottom: '18px' }}>
                                 <div className="row">
                                     <div className="col-xl-7">
