@@ -1,5 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
-const { downloadFile, cancelDownload } = require('./downloadManager');
+const { downloadFile, cancelDownload, pauseDownload } = require('./downloadManager');
 const path = require('path');
 const url = require('url');
 
@@ -68,12 +68,16 @@ app.on('activate', () => {
  * @param {string} url - The URL of the file to be downloaded.
  * @param {string} id - The ID of the download.
  */
-ipcMain.on('start-download', (event, url, id) => {
+ipcMain.on('start-download', (event, url, id, resume) => {
   downloadFile(url, (downloadInfo) => {
     event.sender.send('download-progress', { ...downloadInfo, id });
-  }, id);
+  }, id, resume);
 });
 
 ipcMain.on('cancel-download', (event, id) => {
   cancelDownload(id);
+});
+
+ipcMain.on('pause-download', (event, id) => {
+  pauseDownload(id);
 });

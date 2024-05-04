@@ -1,14 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DownloadProgress from './DownloadProgress';
 
-/**
- * DownloadComponent is a React component that handles downloading files.
- *
- * @param {Object} props - The component props.
- * @param {string} props.url - The URL of the file to be downloaded.
- * @param {function} props.removeUrl - The function to remove the URL from the list of downloads.
- * @returns {JSX.Element} The rendered DownloadProgress component.
- */
 function DownloadComponent({ url, removeUrl }) {
   const [downloadInfo, setDownloadInfo] = useState({
     shardProgress: [0, 0, 0, 0],
@@ -19,26 +11,22 @@ function DownloadComponent({ url, removeUrl }) {
   });
 
   const [isCancelled, setIsCancelled] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const currentDownload = useRef({ url: null, id: null });
   const handleDownloadProgress = useRef(null);
   const downloadId = useRef(0);
 
   useEffect(() => {
-    console.log('useEffect triggered');
-
+    console.log('useEffect triggered for starting a new download');
     if (currentDownload.current.id !== null) {
       window.electron.offDownloadProgress(currentDownload.current.id);
     }
-
-    const id = downloadId.current++;
+    const id = Date.now(); 
     console.log(`Generated id: ${id}`);
     currentDownload.current = { url, id };
-
     let isMounted = true;
-
     handleDownloadProgress.current = (info) => {
       if (!isMounted || info.id !== id) return;
-
       setDownloadInfo(prevDownloadInfo => ({
         ...prevDownloadInfo,
         shardProgress: prevDownloadInfo.shardProgress.map((progress, index) => index === info.shardIndex ? info.progress : progress),
@@ -48,20 +36,25 @@ function DownloadComponent({ url, removeUrl }) {
         eta: info.eta,
       }));
     };
-
-
     window.electron.onDownloadProgress(id, handleDownloadProgress.current);
-    window.electron.startDownload(url, id);
+    window.electron.startDownload(url, id, isPaused);
     console.log(`Starting download with id: ${id}`);
-
     return () => {
       isMounted = false;
       window.electron.offDownloadProgress(id);
-      if (isCancelled) {
-        window.electron.cancelDownload(id);
-      }
     };
-  }, [url, isCancelled]);
+  }, [url]); 
+
+  
+  useEffect(() => {
+    console.log('useEffect triggered for handling pause and cancel actions');
+    if (isCancelled) {
+      window.electron.cancelDownload(currentDownload.current.id);
+    }
+    if (isPaused) {
+      window.electron.pauseDownload(currentDownload.current.id);
+    }
+  }, [isCancelled, isPaused]); 
 
   const cancelDownload = () => {
     setIsCancelled(true);
@@ -69,6 +62,14 @@ function DownloadComponent({ url, removeUrl }) {
     window.electron.cancelDownload(currentDownload.current.id);
     console.log('Download cancelled');
     removeUrl(url);
+  };
+
+  const pauseDownload = () => {
+    setIsPaused(true);
+    console.log(`isPaused set to: ${isPaused}`);
+    console.log(`Request to pause download with id: ${currentDownload.current.id}`);
+    window.electron.pauseDownload(currentDownload.current.id);
+    console.log('Download paused');
   };
 
   const totalProgress = downloadInfo.shardProgress.reduce((a, b) => a + b, 0) / 4;
@@ -82,6 +83,7 @@ function DownloadComponent({ url, removeUrl }) {
       speed={downloadInfo.speed}
       eta={downloadInfo.eta}
       cancelDownload={cancelDownload}
+      pauseDownload={pauseDownload}
     />
   );
 }
