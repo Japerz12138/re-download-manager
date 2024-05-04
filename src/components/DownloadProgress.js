@@ -57,7 +57,7 @@ function formatETA(etaInSeconds) {
   }
 }
 
-function DownloadProgress({ progress, fileName, fileSize, speed, eta, cancelDownload }) {
+function DownloadProgress({ progress, fileName, fileSize, speed, eta, cancelDownload, pauseDownload }) {
   const roundedProgress = Math.round(progress);
   const formattedFileSize = formatFileSize(parseInt(fileSize));
   const formattedETA = formatETA(parseInt(eta));
@@ -72,7 +72,7 @@ function DownloadProgress({ progress, fileName, fileSize, speed, eta, cancelDown
           <h6 className="text-muted mb-2" style={{ fontSize: '13px' }}>{formattedFileSize} ({speed} MB/s)</h6>
         </div>
         <div className="col text-end">
-          <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px' }}>
+          <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px' }} onClick={pauseDownload}>
             <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" className="bi bi-pause-fill text-center" style={{ fontSize: '25px', marginLeft: '-5px' }}>
               <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5m5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5"></path>
             </svg>
@@ -92,7 +92,7 @@ function DownloadProgress({ progress, fileName, fileSize, speed, eta, cancelDown
           </div>
 
           {/* For Ethan */}
-          
+
           {/* Error Progress Bar */}
           {/* <div class="progress" style={{ 'border-radius': '68px' }}>
             <div class="progress-bar bg-danger progress-bar-striped" aria-valuenow="73" aria-valuemin="0" aria-valuemax="100" style={{ 'width': '73%' }}>73%</div>

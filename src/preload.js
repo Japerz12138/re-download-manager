@@ -20,6 +20,11 @@ contextBridge.exposeInMainWorld(
       ipcRenderer.send('start-download', url, id);
     },
 
+    pauseDownload: (id) => {
+      console.log(`pauseDownload called with id: ${id}`);
+      ipcRenderer.send('pause-download', id);
+    },
+
     /**
      * Sends a message to the main process to cancel a download.
      * @param {number} id - The unique identifier for the download.

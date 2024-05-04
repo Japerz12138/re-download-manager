@@ -7,7 +7,7 @@ const stream = require('stream');
 const pipeline = promisify(stream.pipeline);
 const { Notification, app } = require('electron');
 
-//Get the app name
+
 app.on('ready', () => app.setAppUserModelId(app.name));
 
 class ProgressStream extends stream.Transform {
@@ -55,29 +55,51 @@ let downloads = {};
  * @param {number} [numShards=4] - The number of file shards to download in parallel.
  * @returns {Promise<void>} - A promise that resolves when the download is complete or rejects on error.
  */
-async function downloadFile(url, onProgress, id, numShards = 4) {
+async function downloadFile(url, onProgress, id, numShards = 4, resume = false) {
   console.log(`downloadFile called with id: ${id}`);
   try {
     console.log(`Starting download ${id}`);
     const CancelToken = axios.CancelToken;
     const source = CancelToken.source();
 
-    const response = await axios.head(url);
-    const fileSize = parseInt(response.headers['content-length']);
-    const partSize = Math.floor(fileSize / numShards);
-    const lastPartSize = fileSize - partSize * (numShards - 1);
-    const fileName = path.basename(url);
+    let fileSize, partSize, lastPartSize, fileName, totalDownloadedBytes, totalSpeeds;
+    const stateFilePath = path.join(__dirname, 'temp', `${id}-state.json`);
+    if (fs.existsSync(stateFilePath)) {
+      console.log(`Resuming download ${id}`);
+      const downloadState = JSON.parse(await fs.promises.readFile(stateFilePath));
+      fileSize = downloadState.fileSize;
+      partSize = Math.floor(fileSize / numShards);
+      lastPartSize = fileSize - partSize * (numShards - 1);
+      fileName = path.basename(downloadState.url);
+      totalDownloadedBytes = Array(numShards).fill(downloadState.totalBytes);
+      totalSpeeds = Array(numShards).fill(0);
+    } else {
+      console.log(`Starting new download ${id}`);
+      const response = await axios.head(url);
+      fileSize = parseInt(response.headers['content-length']);
+      partSize = Math.floor(fileSize / numShards);
+      lastPartSize = fileSize - partSize * (numShards - 1);
+      fileName = path.basename(url);
+      totalDownloadedBytes = Array(numShards).fill(0);
+      totalSpeeds = Array(numShards).fill(0);
+    }
 
-    let totalDownloadedBytes = Array(numShards).fill(0);
-    let totalSpeeds = Array(numShards).fill(0);
-
-    downloads[id] = { streams: [], tempFilePaths: [], cancelSource: source, isCancelled: false };
+    downloads[id] = { 
+      streams: [], 
+      tempFilePaths: [], 
+      numShards: numShards,
+      url: url,
+      cancelSource: source, 
+      isCancelled: false, 
+      totalDownloadedBytes: totalDownloadedBytes 
+    };
 
     const promises = Array.from({ length: numShards }, async (_, i) => {
       const start = i * partSize;
       const end = i === numShards - 1 ? fileSize : start + partSize - 1;
       const currentPartSize = i === numShards - 1 ? lastPartSize : partSize;
-      const tempFilePath = path.join(__dirname, 'temp', `shard-${i}`);
+      const tempFilePath = path.join(__dirname, 'temp', id.toString(), `shard-${i}`);
+      fs.mkdirSync(path.dirname(tempFilePath), { recursive: true });
 
       await new Promise(resolve => setTimeout(resolve, i * 10));
 
@@ -160,17 +182,27 @@ async function downloadFile(url, onProgress, id, numShards = 4) {
     if (!downloads[id].isCancelled) {
       console.log(`Writing final file for download ${id}`);
       downloadFileStream.end();
-      
+
       await new Promise((resolve) => downloadFileStream.on('finish', () => {
         console.log('Final file written');
         showNotification('Donwload Complete', fileName + ' has been downloaded.');
         resolve();
       }));
+
+      for (const tempFilePath of tempFilePaths) {
+        console.log(`Deleting temporary file ${tempFilePath} for download ${id}`);
+        try {
+          await fs.promises.unlink(tempFilePath);
+        } catch (err) {
+          console.error(`Failed to delete file ${tempFilePath}: ${err}`);
+        }
+      }
+
+      console.log(`Deleting download ${id} from downloads object`);
+      delete downloads[id];
     } else {
       console.log(`Download ${id} cancelled before writing final file`);
     }
-
-    downloadFileStream.end();
 
     await new Promise((resolve) => downloadFileStream.on('finish', () => {
       console.log('Final file written');
@@ -178,13 +210,6 @@ async function downloadFile(url, onProgress, id, numShards = 4) {
       resolve();
     }));
 
-    for (const tempFilePath of tempFilePaths) {
-      console.log(`Deleting temporary file ${tempFilePath} for download ${id}`);
-      await fs.promises.unlink(tempFilePath);
-    }
-
-    console.log(`Deleting download ${id} from downloads object`);
-    delete downloads[id];
   } catch (error) {
     console.error('Failed to download file:', error);
   }
@@ -195,6 +220,31 @@ showNotification = ($title, $body) => {
     title: $title,
     body: $body
   }).show()
+}
+
+async function pauseDownload(id) {
+  if (downloads[id]) {
+    console.log(`Pausing download ${id}`);
+    downloads[id].isPaused = true;
+    for (const stream of downloads[id].streams) {
+      if (stream.writable && !stream.writableEnded) {
+        console.log(`Ending stream for download ${id}`);
+        stream.end();
+      }
+    }
+    const downloadState = {
+      url: downloads[id].url,
+      totalBytes: downloads[id].totalDownloadedBytes.reduce((a, b) => a + b, 0),
+      fileSize: downloads[id].fileSize,
+      numShards: downloads[id].numShards,
+      tempFilePaths: downloads[id].tempFilePaths,
+      isCancelled: downloads[id].isCancelled,
+    };
+    const stateFilePath = path.join(__dirname, 'temp', `${id}-state.json`);
+    await fs.promises.writeFile(stateFilePath, JSON.stringify(downloadState));
+    console.log(`Download ${id} paused`);
+    downloads[id].cancelSource.cancel(); 
+  }
 }
 
 async function cancelDownload(id) {
@@ -209,10 +259,13 @@ async function cancelDownload(id) {
     }
     for (const tempFilePath of downloads[id].tempFilePaths) {
       console.log(`Deleting temporary file ${tempFilePath} for download ${id}`);
-      // Only delete the temporary file if it belongs to the cancelled download
       if (tempFilePath.includes(id)) {
-        await fs.promises.unlink(tempFilePath).catch(() => {});
+        await fs.promises.unlink(tempFilePath).catch(() => { });
       }
+    }
+    const stateFilePath = path.join(__dirname, 'temp', `${id}-state.json`);
+    if (fs.existsSync(stateFilePath)) {
+      await fs.promises.unlink(stateFilePath).catch(() => { });
     }
     console.log(`Cancelling axios request for download ${id}`);
     downloads[id].cancelSource.cancel();
@@ -221,4 +274,4 @@ async function cancelDownload(id) {
   }
 }
 
-module.exports = { downloadFile, cancelDownload };
+module.exports = { downloadFile, cancelDownload, pauseDownload };
