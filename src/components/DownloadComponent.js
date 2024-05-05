@@ -4,7 +4,7 @@ import DownloadProgress from './DownloadProgress';
 function DownloadComponent({ url, removeUrl }) {
   const [downloadInfo, setDownloadInfo] = useState({
     shardProgress: [0, 0, 0, 0],
-    fileName: '',
+    fileName: 'Requesting download...',
     fileSize: 0,
     speed: 0,
     eta: 0,
@@ -21,7 +21,7 @@ function DownloadComponent({ url, removeUrl }) {
     if (currentDownload.current.id !== null) {
       window.electron.offDownloadProgress(currentDownload.current.id);
     }
-    const id = Date.now(); 
+    const id = Date.now();
     console.log(`Generated id: ${id}`);
     currentDownload.current = { url, id };
     let isMounted = true;
@@ -34,6 +34,7 @@ function DownloadComponent({ url, removeUrl }) {
         fileSize: info.fileSize,
         speed: info.speed,
         eta: info.eta,
+        downloadFolderPath: info.downloadFolderPath,
       }));
     };
     window.electron.onDownloadProgress(id, handleDownloadProgress.current);
@@ -43,9 +44,9 @@ function DownloadComponent({ url, removeUrl }) {
       isMounted = false;
       window.electron.offDownloadProgress(id);
     };
-  }, [url]); 
+  }, [url]);
 
-  
+
   useEffect(() => {
     console.log('useEffect triggered for handling pause and cancel actions');
     if (isCancelled) {
@@ -54,7 +55,7 @@ function DownloadComponent({ url, removeUrl }) {
     if (isPaused) {
       window.electron.pauseDownload(currentDownload.current.id);
     }
-  }, [isCancelled, isPaused]); 
+  }, [isCancelled, isPaused]);
 
   const cancelDownload = () => {
     setIsCancelled(true);
@@ -80,10 +81,12 @@ function DownloadComponent({ url, removeUrl }) {
       progress={totalProgress}
       fileName={downloadInfo.fileName}
       fileSize={downloadInfo.fileSize}
+      downloadFolderPath={downloadInfo.downloadFolderPath}
       speed={downloadInfo.speed}
       eta={downloadInfo.eta}
       cancelDownload={cancelDownload}
       pauseDownload={pauseDownload}
+      isPaused={isPaused}
     />
   );
 }

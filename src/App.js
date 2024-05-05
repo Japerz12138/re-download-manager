@@ -1,16 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
 import Navbar from './Navbar';
 import DownloadComponent from './components/DownloadComponent';
 import Settings from './pages/settings';
 import History from './pages/history';
-import { Button, Modal } from 'react-bootstrap';
+import { Button, Modal, Toast } from 'react-bootstrap';
 
 function HomePage() {
   const [urls, setUrls] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [newUrl, setNewUrl] = useState('');
+  const [showClipboardToast, setShowClipboardToast] = useState(false); // State for clipboard toast
+  const urlInputRef = useRef(null); // Ref for the input field
+
+  // Function to check if there's a URL in the clipboard
+  const checkClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (isValidURL(text)) {
+        setNewUrl(text);
+        setShowModal(true);
+        setShowClipboardToast(true); // Show clipboard toast
+        setTimeout(() => setShowClipboardToast(false), 3000); // Hide toast after 3 seconds
+      }
+    } catch (error) {
+      console.error('Error reading clipboard:', error);
+    }
+  };
+
+  // Function to check if a string is a valid URL
+  const isValidURL = (url) => {
+    try {
+      new URL(url);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    checkClipboard();
+
+    window.addEventListener('focus', handleWindowFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+    };
+  }, []);
+
+  // Function to handle focus event on window
+  const handleWindowFocus = () => {
+    checkClipboard();
+  };
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
@@ -42,25 +84,30 @@ function HomePage() {
       setShowModal(false);
     }
   };
+
   const removeUrl = (url) => {
     setUrls(prevUrls => prevUrls.filter(u => u !== url));
   };
 
   return (
     <div className="App">
-      <div class="container" style={{ 'margin-top': '100px' }}>
-        <div class="row">
-          <div class="col">
-            <div class="card" style={{ 'border-style': 'none' }}>
+      <Toast show={showClipboardToast} onClose={() => setShowClipboardToast(false)} style={{ position: 'fixed', top: '0', right: '0', margin: '1rem', zIndex: '10000' }}>
+        <Toast.Body>URL detected in clipboard</Toast.Body>
+      </Toast>
+
+      <div className="container" style={{ marginTop: '100px' }}>
+        <div className="row">
+          <div className="col">
+            <div className="card" style={{ borderStyle: 'none' }}>
               {/* Conditional rendering for displaying the message or cards */}
               {urls.length === 0 && (
                 <div>
-                  <i class="bi bi-dropbox" style={{ fontSize: '2rem', color: 'grey' }}></i>
-                  <p class="fs-5 text-muted text-uppercase">Nothing Here</p>
+                  <i className="bi bi-dropbox" style={{ fontSize: '2rem', color: 'grey' }}></i>
+                  <p className="fs-5 text-muted text-uppercase">Nothing Here</p>
                   <p className="text-muted">Press + to start a download</p>
                 </div>
               )}
-      {urls.map((url) => <DownloadComponent key={url} url={url} removeUrl={removeUrl} />)}
+              {urls.map((url) => <DownloadComponent key={url} url={url} removeUrl={removeUrl} />)}
             </div>
           </div>
         </div>
@@ -75,7 +122,7 @@ function HomePage() {
           <Modal.Title>Enter Download URL</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <input type="text" value={newUrl} onChange={handleUrlChange} className="form-control" placeholder="Enter URL" />
+          <input ref={urlInputRef} type="text" value={newUrl} onChange={handleUrlChange} className="form-control" placeholder="Enter URL" />
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseModal}>
@@ -96,7 +143,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/history" element={<History />}/>
+        <Route path="/history" element={<History />} />
         <Route path="/settings" element={<Settings />} />
       </Routes>
     </Router>
