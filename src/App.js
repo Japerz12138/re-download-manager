@@ -92,7 +92,7 @@ function HomePage() {
   return (
     <div className="App">
       <Toast show={showClipboardToast} onClose={() => setShowClipboardToast(false)} style={{ position: 'fixed', top: '0', right: '0', margin: '1rem', zIndex: '10000' }}>
-        <Toast.Body>URL detected in clipboard</Toast.Body>
+        <Toast.Body><i class="bi bi-clipboard-check"></i>  URL detected in clipboard!</Toast.Body>
       </Toast>
 
       <div className="container" style={{ marginTop: '100px' }}>
