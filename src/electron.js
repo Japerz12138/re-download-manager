@@ -1,11 +1,11 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
-const { downloadFile, cancelDownload, pauseDownload } = require('./downloadManager');
+const { downloadFile, setDownloadPath, cancelDownload, pauseDownload } = require('./downloadManager');
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
 const url = require('url');
 
-/**
- * Creates the main window for the Electron application.
- */
+
 function createWindow() {
   const startUrl = process.env.ELECTRON_START_URL || url.format({
     pathname: path.join(__dirname, '../build/index.html'),
@@ -28,7 +28,6 @@ function createWindow() {
   });
 
   win.loadURL(startUrl);
-  
 
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
@@ -81,3 +80,34 @@ ipcMain.on('cancel-download', (event, id) => {
 ipcMain.on('pause-download', (event, id) => {
   pauseDownload(id);
 });
+
+
+ipcMain.on('save-settings', (event, newSettings) => {
+  const filePath = path.join(app.getPath('userData'), 'settings.json');
+
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, JSON.stringify(newSettings, null, 2), 'utf8');
+    console.log('Settings file created successfully');
+    return;
+  }
+
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      console.error('Error reading settings file', err);
+      return;
+    }
+
+    const existingSettings = JSON.parse(data);
+    const settings = {...existingSettings, ...newSettings};
+
+    fs.writeFile(filePath, JSON.stringify(settings, null, 2), (err) => {
+      if (err) {
+        console.error('Error writing settings file', err);
+      } else {
+        console.log('Settings saved successfully');
+      }
+    });
+  });
+});
+
+ipcMain.emit('save-settings', null, { directoryPath: path.join(os.homedir(), 'Downloads') });

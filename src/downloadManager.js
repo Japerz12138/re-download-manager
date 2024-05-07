@@ -6,7 +6,35 @@ const { promisify } = require('util');
 const stream = require('stream');
 const pipeline = promisify(stream.pipeline);
 const { Notification, app } = require('electron');
+let config;
+const defaultPath = path.join(os.homedir(), 'Downloads');
+const settingsPath = path.resolve(__dirname, './settings.json');
 
+
+try {
+  config = require('./settings.json');
+} catch (error) {
+  console.error('Could not load config file, defaulting to Downloads folder', error);
+  config = { directoryPath: defaultPath };
+}
+
+try {
+  fs.watch(settingsPath, (eventType, filename) => {
+    if (eventType === 'change') {
+      setTimeout(() => {
+        try {
+          delete require.cache[require.resolve(settingsPath)];
+          config = require(settingsPath);
+        } catch (error) {
+          console.error('Could not load updated config file', error);
+          config = { directoryPath: defaultPath };
+        }
+      }, 1000);
+    }
+  });
+} catch (error) {
+  console.error(`File doesnt exist: ${settingsPath}`, error);
+}
 
 app.on('ready', () => app.setAppUserModelId(app.name));
 
@@ -146,7 +174,7 @@ async function downloadFile(url, onProgress, id, numShards = 4, resume = false) 
     });
     const tempFilePaths = await Promise.all(promises);
 
-    const downloadFolderPath = path.join(os.homedir(), 'Downloads');
+    const downloadFolderPath = config?.directoryPath || path.join(os.homedir(), 'Downloads'); // Use the directory from the config file, or default to the Downloads folder
     const downloadFilePath = path.join(downloadFolderPath, fileName);
     const downloadFileStream = fs.createWriteStream(downloadFilePath);
     downloads[id].streams.push(downloadFileStream);

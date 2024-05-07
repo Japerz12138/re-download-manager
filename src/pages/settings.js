@@ -9,8 +9,10 @@ function Settings() {
         const files = event.target.files;
         if (files.length > 0) {
             const selectedDirectory = files[0];
-            setSelectedDirectoryPath(selectedDirectory.path.split(selectedDirectory.name)[0]);
+            const path = selectedDirectory.path.split(selectedDirectory.name)[0];
+            setSelectedDirectoryPath(path);
             console.log(selectedDirectory.path);
+            window.electron.saveSettings({ directoryPath: path });
         }
     };
 
