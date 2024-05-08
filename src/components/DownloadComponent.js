@@ -12,6 +12,7 @@ function DownloadComponent({ url, removeUrl }) {
 
   const [isCancelled, setIsCancelled] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [isResumed, setIsResumed] = useState(false);
   const currentDownload = useRef({ url: null, id: null });
   const handleDownloadProgress = useRef(null);
   const downloadId = useRef(0);
@@ -72,6 +73,14 @@ function DownloadComponent({ url, removeUrl }) {
     console.log('Download paused');
   };
 
+  const resumeDownload = () => {
+    setIsResumed(true);
+    console.log(`isResumed set to: ${isResumed}`);
+    console.log(`Request to resume download with id: ${currentDownload.current.id}`);
+    window.electron.resumeDownload(currentDownload.current.id);
+    console.log('Download resumed');
+  };
+
   const totalProgress = downloadInfo.shardProgress.reduce((a, b) => a + b, 0) / 4;
 
   return (
@@ -84,6 +93,9 @@ function DownloadComponent({ url, removeUrl }) {
       eta={downloadInfo.eta}
       cancelDownload={cancelDownload}
       pauseDownload={pauseDownload}
+      resumeDownload={resumeDownload}
+      isResumed={isResumed}
+      isPaused={isPaused}
     />
   );
 }

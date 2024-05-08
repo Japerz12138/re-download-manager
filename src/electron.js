@@ -1,5 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
-const { downloadFile, cancelDownload, pauseDownload } = require('./downloadManager');
+const { downloadFile, setDownloadPath, cancelDownload, pauseDownload, resumeDownload } = require('./downloadManager');
 const path = require('path');
 const url = require('url');
 
@@ -62,6 +62,10 @@ app.on('activate', () => {
   }
 });
 
+app.on('ready', () => {
+  ipcMain.emit('save-settings', null, { directoryPath: path.join(os.homedir(), 'Downloads') });
+});
+
 /**
  * Listens for the 'start-download' event and initiates the file download.
  * @param {object} event - The event object.
@@ -80,4 +84,37 @@ ipcMain.on('cancel-download', (event, id) => {
 
 ipcMain.on('pause-download', (event, id) => {
   pauseDownload(id);
+});
+
+ipcMain.on('resume-download', (event, id) => {
+  resumeDownload(id);
+});
+
+
+ipcMain.on('save-settings', (event, newSettings) => {
+  const filePath = path.join(app.getPath('userData'), 'settings.json');
+
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, JSON.stringify(newSettings, null, 2), 'utf8');
+    console.log('Settings file created successfully');
+    return;
+  }
+
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      console.error('Error reading settings file', err);
+      return;
+    }
+
+    const existingSettings = JSON.parse(data);
+    const settings = {...existingSettings, ...newSettings};
+
+    fs.writeFile(filePath, JSON.stringify(settings, null, 2), (err) => {
+      if (err) {
+        console.error('Error writing settings file', err);
+      } else {
+        console.log('Settings saved successfully');
+      }
+    });
+  });
 });
