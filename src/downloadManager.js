@@ -174,7 +174,7 @@ async function downloadFile(url, onProgress, id, numShards = 4, resume = false) 
     });
     const tempFilePaths = await Promise.all(promises);
 
-    const downloadFolderPath = path.join(os.homedir(), 'Downloads');
+    const downloadFolderPath = config?.directoryPath || path.join(os.homedir(), 'Downloads'); // Use the directory from the config file, or default to the Downloads folder
     const downloadFilePath = path.join(downloadFolderPath, fileName);
     const downloadFileStream = fs.createWriteStream(downloadFilePath);
     downloads[id].streams.push(downloadFileStream);

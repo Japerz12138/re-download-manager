@@ -57,11 +57,25 @@ function formatETA(etaInSeconds) {
   }
 }
 
+<<<<<<< HEAD
 function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, speed, eta, cancelDownload, pauseDownload, isPaused, resumeDownload, isResumed }) {
+=======
+function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, speed, eta, cancelDownload, pauseDownload, isPaused }) {
+>>>>>>> b671c50689e6d02119ba93a68354d541361514f9
   const roundedProgress = Math.round(progress);
   const formattedFileSize = formatFileSize(parseInt(fileSize));
   const formattedETA = formatETA(parseInt(eta));
   const fileIcon = getFileIcon(fileName);
+
+  //Calculate the dynamic downloaded file size
+  const downloadedBytes = (progress / 100) * parseInt(fileSize);
+  const formattedDownloadedSize = formatFileSize(downloadedBytes);
+
+  const isFinished = roundedProgress === 100;
+
+  const handleOpenFolder = () => {
+    console.log(downloadFolderPath);
+  };
 
   return (
     <div className="card-body text-start shadow" style={{ borderRadius: '12px', borderTopLeftRadius: '-1px', opacity: '1', borderColor: 'rgb(0,128,255)', marginBottom: '18px' }}>
@@ -69,18 +83,26 @@ function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, sp
         <div className="col-md-8 col-lg-7">
           {fileIcon}
           <h4 style={{ marginTop: '-28px', paddingRight: '0px', paddingLeft: '0px', marginLeft: '35px', marginRight: '0px' }}>{fileName}</h4>
-          <h6 className="text-muted mb-2" style={{ fontSize: '13px' }}>{formattedFileSize} ({speed} MB/s)</h6>
+          <h6 className="text-muted mb-2" style={{ fontSize: '13px' }}>{formattedDownloadedSize} / {formattedFileSize} ({speed} MB/s)</h6>
         </div>
         <div className="col text-end">
           {isFinished ? (
             <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={handleOpenFolder}>
               <i className="bi bi-folder" style={{ fontSize: '1.3rem' }}></i>
             </button>
+<<<<<<< HEAD
             ) : isPaused ? (
               <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={resumeDownload}>
                 <i className="bi bi-play-fill" style={{ fontSize: '1.5rem' }}></i>
               </button>
             ) : (
+=======
+          ) : isPaused ? (
+            <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={pauseDownload}>
+              <i className="bi bi-play-fill" style={{ fontSize: '1.5rem' }}></i>
+            </button>
+          ) : (
+>>>>>>> b671c50689e6d02119ba93a68354d541361514f9
             <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={pauseDownload}>
               <i className="bi bi-pause" style={{ fontSize: '1.5rem' }}></i>
             </button>
@@ -92,26 +114,18 @@ function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, sp
       </div>
       <div className="row">
         <div className="col">
-          <div className="progress" style={{ borderRadius: '68px' }}>
-            {/* Now when progress hits 100%, it will turns green and disable the animated progress bar. */}
-            <div className={`progress-bar ${progress === 100 ? 'bg-success' : 'progress-bar-striped progress-bar-animated'}`} aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100" style={{ width: `${progress}%` }}>{roundedProgress}%</div>
-          </div>
-
-          {/* For Ethan */}
-
-          {/* Error Progress Bar */}
-          {/* <div class="progress" style={{ 'border-radius': '68px' }}>
-            <div class="progress-bar bg-danger progress-bar-striped" aria-valuenow="73" aria-valuemin="0" aria-valuemax="100" style={{ 'width': '73%' }}>73%</div>
-          </div> */}
-
-          {/* Paused Progress Bar */}
-          {/* <div class="progress" style={{ 'border-radius': '68px' }}>
-            <div class="progress-bar progress-bar-striped progress-bar-animated" aria-valuenow="6" aria-valuemin="0" aria-valuemax="100" style={{ 'width': '6%' }}>6%</div>
-          </div> */}
-
+          {/* Conditional rendering to display "PAUSED" when the download is paused */}
+          {isPaused ? (
+            <div className="progress" style={{ borderRadius: '68px' }}>
+              <div className="progress-bar bg-warning" role="progressbar" style={{ width: '100%' }} aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">PAUSED</div>
+            </div>
+          ) : (
+            <div className="progress" style={{ borderRadius: '68px' }}>
+              <div className={`progress-bar ${progress === 100 ? 'bg-success' : 'progress-bar-striped progress-bar-animated'}`} aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100" style={{ width: `${progress}%` }}>{roundedProgress}%</div>
+            </div>
+          )}
         </div>
       </div>
-
 
       <h6 className="text-end text-muted card-subtitle mb-2" style={{ fontSize: '13px', marginTop: '6px', marginBottom: '5px', paddingBottom: '0px' }}>ETA {formattedETA}</h6>
     </div>

@@ -1,11 +1,15 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
+<<<<<<< HEAD
 const { downloadFile, setDownloadPath, cancelDownload, pauseDownload, resumeDownload } = require('./downloadManager');
+=======
+const { downloadFile, setDownloadPath, cancelDownload, pauseDownload } = require('./downloadManager');
+>>>>>>> b671c50689e6d02119ba93a68354d541361514f9
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
 const url = require('url');
 
-/**
- * Creates the main window for the Electron application.
- */
+
 function createWindow() {
   const startUrl = process.env.ELECTRON_START_URL || url.format({
     pathname: path.join(__dirname, '../build/index.html'),
@@ -28,7 +32,6 @@ function createWindow() {
   });
 
   win.loadURL(startUrl);
-  
 
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
@@ -86,10 +89,13 @@ ipcMain.on('pause-download', (event, id) => {
   pauseDownload(id);
 });
 
+<<<<<<< HEAD
 ipcMain.on('resume-download', (event, id) => {
   resumeDownload(id);
 });
 
+=======
+>>>>>>> b671c50689e6d02119ba93a68354d541361514f9
 
 ipcMain.on('save-settings', (event, newSettings) => {
   const filePath = path.join(app.getPath('userData'), 'settings.json');
@@ -117,4 +123,10 @@ ipcMain.on('save-settings', (event, newSettings) => {
       }
     });
   });
+<<<<<<< HEAD
 });
+=======
+});
+
+ipcMain.emit('save-settings', null, { directoryPath: path.join(os.homedir(), 'Downloads') });
+>>>>>>> b671c50689e6d02119ba93a68354d541361514f9

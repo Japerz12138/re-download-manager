@@ -10,6 +10,10 @@ const listeners = new Map();
 contextBridge.exposeInMainWorld(
   'electron',
   {
+    saveSettings: (settings) => {
+      ipcRenderer.send('save-settings', settings);
+    },
+
     /**
      * Sends a message to the main process to start a download.
      * @param {string} url - The URL of the file to download.
