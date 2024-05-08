@@ -57,11 +57,7 @@ function formatETA(etaInSeconds) {
   }
 }
 
-<<<<<<< HEAD
 function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, speed, eta, cancelDownload, pauseDownload, isPaused, resumeDownload, isResumed }) {
-=======
-function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, speed, eta, cancelDownload, pauseDownload, isPaused }) {
->>>>>>> b671c50689e6d02119ba93a68354d541361514f9
   const roundedProgress = Math.round(progress);
   const formattedFileSize = formatFileSize(parseInt(fileSize));
   const formattedETA = formatETA(parseInt(eta));
@@ -90,19 +86,11 @@ function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, sp
             <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={handleOpenFolder}>
               <i className="bi bi-folder" style={{ fontSize: '1.3rem' }}></i>
             </button>
-<<<<<<< HEAD
             ) : isPaused ? (
               <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={resumeDownload}>
                 <i className="bi bi-play-fill" style={{ fontSize: '1.5rem' }}></i>
               </button>
             ) : (
-=======
-          ) : isPaused ? (
-            <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={pauseDownload}>
-              <i className="bi bi-play-fill" style={{ fontSize: '1.5rem' }}></i>
-            </button>
-          ) : (
->>>>>>> b671c50689e6d02119ba93a68354d541361514f9
             <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={pauseDownload}>
               <i className="bi bi-pause" style={{ fontSize: '1.5rem' }}></i>
             </button>

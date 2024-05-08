@@ -95,11 +95,8 @@ function DownloadComponent({ url, removeUrl }) {
       eta={downloadInfo.eta}
       cancelDownload={cancelDownload}
       pauseDownload={pauseDownload}
-<<<<<<< HEAD
       resumeDownload={resumeDownload}
       isResumed={isResumed}
-=======
->>>>>>> b671c50689e6d02119ba93a68354d541361514f9
       isPaused={isPaused}
     />
   );

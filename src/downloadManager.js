@@ -8,11 +8,10 @@ const pipeline = promisify(stream.pipeline);
 const { Notification, app } = require('electron');
 let config;
 const defaultPath = path.join(os.homedir(), 'Downloads');
-const settingsPath = path.resolve(__dirname, './settings.json');
-
+const settingsPath = path.join(app.getPath('userData'), 'settings.json');
 
 try {
-  config = require('./settings.json');
+  config = require(settingsPath);
 } catch (error) {
   console.error('Could not load config file, defaulting to Downloads folder', error);
   config = { directoryPath: defaultPath };
@@ -325,7 +324,7 @@ async function resumeDownload(id) {
 
   await Promise.all(promises);
 
-  const downloadFolderPath = config?.directoryPath || path.join(os.homedir(), 'Downloads'); // Use the directory from the config file, or default to the Downloads folder
+  const downloadFolderPath = config?.directoryPath || path.join(os.homedir(), 'Downloads');
   const downloadFilePath = path.join(downloadFolderPath, path.basename(url));
   const downloadFileStream = fs.createWriteStream(downloadFilePath);
 
