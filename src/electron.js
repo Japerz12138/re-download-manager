@@ -1,5 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
-const { downloadFile, setDownloadPath, cancelDownload, pauseDownload } = require('./downloadManager');
+const { downloadFile, setDownloadPath, cancelDownload, pauseDownload, resumeDownload } = require('./downloadManager');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -61,6 +61,10 @@ app.on('activate', () => {
   }
 });
 
+app.on('ready', () => {
+  ipcMain.emit('save-settings', null, { directoryPath: path.join(os.homedir(), 'Downloads') });
+});
+
 /**
  * Listens for the 'start-download' event and initiates the file download.
  * @param {object} event - The event object.
@@ -79,6 +83,10 @@ ipcMain.on('cancel-download', (event, id) => {
 
 ipcMain.on('pause-download', (event, id) => {
   pauseDownload(id);
+});
+
+ipcMain.on('resume-download', (event, id) => {
+  resumeDownload(id);
 });
 
 
@@ -109,5 +117,3 @@ ipcMain.on('save-settings', (event, newSettings) => {
     });
   });
 });
-
-ipcMain.emit('save-settings', null, { directoryPath: path.join(os.homedir(), 'Downloads') });

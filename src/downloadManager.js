@@ -8,11 +8,10 @@ const pipeline = promisify(stream.pipeline);
 const { Notification, app } = require('electron');
 let config;
 const defaultPath = path.join(os.homedir(), 'Downloads');
-const settingsPath = path.resolve(__dirname, './settings.json');
-
+const settingsPath = path.join(app.getPath('userData'), 'settings.json');
 
 try {
-  config = require('./settings.json');
+  config = require(settingsPath);
 } catch (error) {
   console.error('Could not load config file, defaulting to Downloads folder', error);
   config = { directoryPath: defaultPath };
@@ -260,18 +259,107 @@ async function pauseDownload(id) {
         stream.end();
       }
     }
+    const response = await axios.head(downloads[id].url);
+    const fileSize = parseInt(response.headers['content-length'], 10);
     const downloadState = {
       url: downloads[id].url,
       totalBytes: downloads[id].totalDownloadedBytes.reduce((a, b) => a + b, 0),
-      fileSize: downloads[id].fileSize,
+      fileSize: fileSize,
       numShards: downloads[id].numShards,
       tempFilePaths: downloads[id].tempFilePaths,
       isCancelled: downloads[id].isCancelled,
+      totalBytesDownloaded: downloads[id].totalDownloadedBytes,
     };
-    const stateFilePath = path.join(__dirname, 'temp', `${id}-state.json`);
+    const stateFilePath = path.join(__dirname, 'temp', id.toString(), `${id}-state.json`);
     await fs.promises.writeFile(stateFilePath, JSON.stringify(downloadState));
     console.log(`Download ${id} paused`);
     downloads[id].cancelSource.cancel(); 
+  }
+}
+
+//tested and working resume-from-state setup
+//uploading this before I break everything with component-from-state LOL
+
+async function resumeDownload(id) {
+  id = id.toString();
+  const stateFilePath = path.join(__dirname, 'temp', id, `${id}-state.json`);
+  if (!fs.existsSync(stateFilePath)) {
+    throw new Error(`No saved state file found for download ${id}`);
+  }
+
+  const downloadState = JSON.parse(await fs.promises.readFile(stateFilePath, 'utf-8'));
+
+  const { url, fileSize, numShards, totalBytesDownloaded } = downloadState;
+  const partSize = Math.floor(fileSize / numShards);
+
+  const promises = Array.from({ length: numShards }, async (_, i) => {
+    const start = i * partSize + (totalBytesDownloaded[i] || 0);
+    const end = i === numShards - 1 ? fileSize - 1 : (i + 1) * partSize - 1;
+    console.log(`Shard ${i}: start = ${start}, end = ${end}`);
+
+    if (start >= end) {
+      console.error(`Invalid byte range: start (${start}) is greater than or equal to end (${end})`);
+      return;
+    }
+    
+    if (end >= fileSize) {
+      console.error(`Invalid byte range: end (${end}) is greater than or equal to fileSize (${fileSize})`);
+      end = fileSize - 1;
+    }
+
+    const response = await axios.get(url, {
+      headers: { range: `bytes=${start}-${end}` },
+      responseType: 'stream',
+    });
+
+    const writer = fs.createWriteStream(path.join(__dirname, 'temp', id, `shard-${i}`), { flags: 'a' });
+
+    response.data.pipe(writer);
+
+    return new Promise((resolve, reject) => {
+      writer.on('finish', resolve);
+      writer.on('error', reject);
+    });
+  });
+
+  await Promise.all(promises);
+
+  const downloadFolderPath = config?.directoryPath || path.join(os.homedir(), 'Downloads');
+  const downloadFilePath = path.join(downloadFolderPath, path.basename(url));
+  const downloadFileStream = fs.createWriteStream(downloadFilePath);
+
+  for (let i = 0; i < numShards; i++) {
+    const tempFilePath = path.join(__dirname, 'temp', id, `shard-${i}`);
+    const tempFileStream = fs.createReadStream(tempFilePath);
+
+    await new Promise((resolve, reject) => {
+      pipeline(tempFileStream, downloadFileStream, { end: false })
+        .then(() => {
+          console.log(`Shard ${i} written to final file for download ${id}`);
+          resolve();
+        })
+        .catch((error) => {
+          reject(error);
+        });
+      downloadFileStream.on('finish', resolve);
+    });
+  }
+
+  downloadFileStream.end();
+
+  await new Promise((resolve) => downloadFileStream.on('finish', () => {
+    console.log('Final file written');
+    showNotification('Download Complete', path.basename(url) + ' has been downloaded.');
+    resolve();
+  }));
+
+  for (let i = 0; i < numShards; i++) {
+    const tempFilePath = path.join(__dirname, 'temp', id, `shard-${i}`);
+    try {
+      await fs.promises.unlink(tempFilePath);
+    } catch (err) {
+      console.error(`Failed to delete file ${tempFilePath}: ${err}`);
+    }
   }
 }
 
@@ -302,4 +390,4 @@ async function cancelDownload(id) {
   }
 }
 
-module.exports = { downloadFile, cancelDownload, pauseDownload };
+module.exports = { downloadFile, cancelDownload, pauseDownload, resumeDownload };
