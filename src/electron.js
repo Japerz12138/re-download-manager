@@ -5,6 +5,8 @@ const fs = require('fs');
 const os = require('os');
 const url = require('url');
 
+const filePath = path.join(app.getPath('userData'), 'settings.json');
+const tempPath = './src/temp';
 
 function createWindow() {
   const startUrl = process.env.ELECTRON_START_URL || url.format({
@@ -35,15 +37,12 @@ function createWindow() {
     }
   });
 
-  const fs = require('fs');
-  const tempPath = './src/temp';
-
   if (!fs.existsSync(tempPath)) {
     fs.mkdirSync(tempPath);
     console.log(`Folder ${tempPath} created successfully.`);
-} else {
+  } else {
     console.log(`Folder ${tempPath} already exists. Skipping.`);
-}
+  }
 
 }
 
@@ -61,8 +60,13 @@ app.on('activate', () => {
   }
 });
 
+
 app.on('ready', () => {
-  ipcMain.emit('save-settings', null, { directoryPath: path.join(os.homedir(), 'Downloads') });
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err || data.length === 0) {
+      ipcMain.emit('save-settings', null, { directoryPath: path.join(os.homedir(), 'Downloads') });
+    }
+  });
 });
 
 /**
@@ -106,7 +110,7 @@ ipcMain.on('save-settings', (event, newSettings) => {
     }
 
     const existingSettings = JSON.parse(data);
-    const settings = {...existingSettings, ...newSettings};
+    const settings = { ...existingSettings, ...newSettings };
 
     fs.writeFile(filePath, JSON.stringify(settings, null, 2), (err) => {
       if (err) {
@@ -116,4 +120,17 @@ ipcMain.on('save-settings', (event, newSettings) => {
       }
     });
   });
+});
+
+ipcMain.handle('get-settings', async () => {
+  const filePath = path.join(app.getPath('userData'), 'settings.json');
+
+  if (!fs.existsSync(filePath)) {
+    return { directoryPath: path.join(os.homedir(), 'Downloads') };
+  }
+
+  const data = fs.readFileSync(filePath, 'utf8');
+  const settings = JSON.parse(data);
+
+  return settings;
 });
