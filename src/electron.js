@@ -7,6 +7,7 @@ const url = require('url');
 
 const filePath = path.join(app.getPath('userData'), 'settings.json');
 const tempPath = './src/temp';
+const applyTheme = require('./components/applyTheme');
 
 function createWindow() {
   const startUrl = process.env.ELECTRON_START_URL || url.format({
@@ -64,7 +65,12 @@ app.on('activate', () => {
 app.on('ready', () => {
   fs.readFile(filePath, 'utf8', (err, data) => {
     if (err || data.length === 0) {
-      ipcMain.emit('save-settings', null, { directoryPath: path.join(os.homedir(), 'Downloads') });
+      ipcMain.emit('save-settings', null, { 
+        directoryPath: path.join(os.homedir(), 'Downloads'),
+        theme: 'Follow System'
+      });
+    } else {
+      applyTheme();
     }
   });
 });
@@ -126,11 +132,36 @@ ipcMain.handle('get-settings', async () => {
   const filePath = path.join(app.getPath('userData'), 'settings.json');
 
   if (!fs.existsSync(filePath)) {
-    return { directoryPath: path.join(os.homedir(), 'Downloads') };
+    return { 
+      directoryPath: path.join(os.homedir(), 'Downloads'),
+      theme: 'Follow System'
+    };
   }
 
   const data = fs.readFileSync(filePath, 'utf8');
   const settings = JSON.parse(data);
 
   return settings;
+});
+
+ipcMain.on('apply-theme', (event, theme) => {
+  switch (theme) {
+    case 'Follow System':
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('bootstrap-dark');
+        document.body.classList.remove('bootstrap');
+      } else {
+        document.body.classList.add('bootstrap');
+        document.body.classList.remove('bootstrap-dark');
+      }
+      break;
+    case 'Light':
+      document.body.classList.add('bootstrap');
+      document.body.classList.remove('bootstrap-dark');
+      break;
+    case 'Dark':
+      document.body.classList.add('bootstrap-dark');
+      document.body.classList.remove('bootstrap');
+      break;
+  }
 });

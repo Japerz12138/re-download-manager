@@ -1,14 +1,37 @@
-import React, { useEffect, useRef, useState  } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Dropdown } from 'react-bootstrap';
 
 function Settings() {
 
     const [selectedDirectoryPath, setSelectedDirectoryPath] = useState('');
+    const [selectedTheme, setSelectedTheme] = useState('Follow System');
     const fileInputRef = useRef(null);
 
     useEffect(() => {
         window.electron.getSettings().then((settings) => {
             setSelectedDirectoryPath(settings.directoryPath);
-        });
+            setSelectedTheme(settings.theme);
+    
+            switch (selectedTheme) {
+                case 'Follow System':
+                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        document.body.classList.add('bootstrap-dark');
+                        document.body.classList.remove('bootstrap');
+                    } else {
+                        document.body.classList.add('bootstrap');
+                        document.body.classList.remove('bootstrap-dark');
+                    }
+                    break;
+                case 'Light':
+                    document.body.classList.add('bootstrap');
+                    document.body.classList.remove('bootstrap-dark');
+                    break;
+                case 'Dark':      
+                    document.body.classList.add('bootstrap-dark');
+                    document.body.classList.remove('bootstrap');
+                    break;
+            }
+        }, [selectedTheme]);
     }, []);
 
     const handleDirectoryChange = (event) => {
@@ -25,6 +48,31 @@ function Settings() {
     const openDirectorySelector = (event) => {
         event.preventDefault();
         fileInputRef.current.click();
+    };
+
+    const handleThemeChange = (theme) => {
+        setSelectedTheme(theme);
+        window.electron.saveSettings({ theme: theme });
+
+        switch (theme) {
+            case 'Follow System':
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.body.classList.add('bootstrap-dark');
+                    document.body.classList.remove('bootstrap');
+                } else {
+                    document.body.classList.add('bootstrap');
+                    document.body.classList.remove('bootstrap-dark');
+                }
+                break;
+            case 'Light':
+                document.body.classList.add('bootstrap');
+                document.body.classList.remove('bootstrap-dark');
+                break;
+            case 'Dark':
+                document.body.classList.add('bootstrap-dark');
+                document.body.classList.remove('bootstrap');
+                break;
+        }
     };
 
     return (
@@ -76,16 +124,17 @@ function Settings() {
                                         <h6 className="text-muted mb-2" style={{ marginBottom: '-11px', marginTop: '-4px' }}>Change between dark mode, light mode or follow system settings.</h6>
                                     </div>
                                     <div className="col-xl-5" style={{ textAlign: 'right', marginTop: '10px' }}>
-                                        <div className="dropdown">
-                                            <button className="btn btn-primary dropdown-toggle" type="button" id="themeDropdown" data-bs-toggle="dropdown" aria-expanded="false" style={{ textAlign: 'right', marginRight: '25px' }}>
-                                                Follow System
-                                            </button>
-                                            <ul className="dropdown-menu" aria-labelledby="themeDropdown">
-                                                <li><a className="dropdown-item" href="#">Follow System</a></li>
-                                                <li><a className="dropdown-item" href="#">Light</a></li>
-                                                <li><a className="dropdown-item" href="#">Dark</a></li>
-                                            </ul>
-                                        </div>
+                                        <Dropdown>
+                                            <Dropdown.Toggle variant="primary" id="themeDropdown">
+                                                {selectedTheme}
+                                            </Dropdown.Toggle>
+
+                                            <Dropdown.Menu>
+                                                <Dropdown.Item onClick={() => handleThemeChange('Follow System')}>Follow System</Dropdown.Item>
+                                                <Dropdown.Item onClick={() => handleThemeChange('Light')}>Light</Dropdown.Item>
+                                                <Dropdown.Item onClick={() => handleThemeChange('Dark')}>Dark</Dropdown.Item>
+                                            </Dropdown.Menu>
+                                        </Dropdown>
                                     </div>
                                 </div>
                             </div>
@@ -95,20 +144,22 @@ function Settings() {
                                         <h4><i className="bi bi-copy"></i> Download Thread</h4>
                                         <h6 className="text-muted mb-2" style={{ marginBottom: '-11px', marginTop: '-4px' }}>Select the number of shards you want to split. Increasing threads may speed up downloads, or it may slow down your computer.</h6>
                                     </div>
-                                    <div className="col-xl-5" style={{ textAlign: 'right', marginTop: '10px' }}>
-                                        <div className="dropdown">
-                                            <button className="btn btn-primary dropdown-toggle" type="button" id="threadDropdown" data-bs-toggle="dropdown" aria-expanded="false" style={{ textAlign: 'right', marginRight: '25px' }}>
+                                    <div className="col-xl-5" style={{ textAlign: 'right', marginTop: '10px' }}>  
+                                        <Dropdown>
+                                            <Dropdown.Toggle variant="primary" id="threadDropdown">
                                                 Let System Decide
-                                            </button>
-                                            <ul className="dropdown-menu" aria-labelledby="threadDropdown">
-                                                <li><a className="dropdown-item" href="#">Let System Decide</a></li>
-                                                <li><a className="dropdown-item" href="#">2</a></li>
-                                                <li><a className="dropdown-item" href="#">4</a></li>
-                                                <li><a className="dropdown-item" href="#">8</a></li>
-                                                <li><a className="dropdown-item" href="#">16</a></li>
-                                                <li><a className="dropdown-item" href="#">32</a></li>
-                                            </ul>
-                                        </div>
+                                            </Dropdown.Toggle>
+
+                                            <Dropdown.Menu>
+                                                <Dropdown.Item>Let System Decide</Dropdown.Item>
+                                                <Dropdown.Item>2</Dropdown.Item>
+                                                <Dropdown.Item>4</Dropdown.Item>
+                                                <Dropdown.Item>6</Dropdown.Item>
+                                                <Dropdown.Item>8</Dropdown.Item>
+                                                <Dropdown.Item>16</Dropdown.Item>
+                                                <Dropdown.Item>32</Dropdown.Item>
+                                            </Dropdown.Menu>
+                                        </Dropdown>
                                     </div>
                                 </div>
                             </div>
