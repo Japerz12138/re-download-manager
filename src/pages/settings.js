@@ -5,6 +5,12 @@ function Settings() {
     const [selectedDirectoryPath, setSelectedDirectoryPath] = useState('');
     const fileInputRef = useRef(null);
 
+    useEffect(() => {
+        window.electron.getSettings().then((settings) => {
+            setSelectedDirectoryPath(settings.directoryPath);
+        });
+    }, []);
+
     const handleDirectoryChange = (event) => {
         const files = event.target.files;
         if (files.length > 0) {

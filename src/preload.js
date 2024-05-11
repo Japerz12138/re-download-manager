@@ -14,6 +14,10 @@ contextBridge.exposeInMainWorld(
       ipcRenderer.send('save-settings', settings);
     },
 
+    getSettings: async () => {
+      return ipcRenderer.invoke('get-settings');
+    },
+
     /**
      * Sends a message to the main process to start a download.
      * @param {string} url - The URL of the file to download.
