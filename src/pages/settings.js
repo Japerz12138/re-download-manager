@@ -1,37 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Dropdown } from 'react-bootstrap';
+const { version } = require('../../package.json');
 
 function Settings() {
 
     const [selectedDirectoryPath, setSelectedDirectoryPath] = useState('');
-    const [selectedTheme, setSelectedTheme] = useState('Follow System');
+    const [selectedTheme, setSelectedTheme] = useState('Dark');
+    const [selectedThreadNumber, setSelectedThreadNumber] = useState('');
     const fileInputRef = useRef(null);
 
     useEffect(() => {
         window.electron.getSettings().then((settings) => {
             setSelectedDirectoryPath(settings.directoryPath);
             setSelectedTheme(settings.theme);
-    
-            switch (selectedTheme) {
-                case 'Follow System':
-                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                        document.body.classList.add('bootstrap-dark');
-                        document.body.classList.remove('bootstrap');
-                    } else {
-                        document.body.classList.add('bootstrap');
-                        document.body.classList.remove('bootstrap-dark');
-                    }
-                    break;
-                case 'Light':
-                    document.body.classList.add('bootstrap');
-                    document.body.classList.remove('bootstrap-dark');
-                    break;
-                case 'Dark':      
-                    document.body.classList.add('bootstrap-dark');
-                    document.body.classList.remove('bootstrap');
-                    break;
-            }
-        }, [selectedTheme]);
+            setSelectedThreadNumber(settings.threadNumber);
+        });
     }, []);
 
     const handleDirectoryChange = (event) => {
@@ -54,25 +37,18 @@ function Settings() {
         setSelectedTheme(theme);
         window.electron.saveSettings({ theme: theme });
 
-        switch (theme) {
-            case 'Follow System':
-                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    document.body.classList.add('bootstrap-dark');
-                    document.body.classList.remove('bootstrap');
-                } else {
-                    document.body.classList.add('bootstrap');
-                    document.body.classList.remove('bootstrap-dark');
-                }
-                break;
-            case 'Light':
-                document.body.classList.add('bootstrap');
-                document.body.classList.remove('bootstrap-dark');
-                break;
-            case 'Dark':
-                document.body.classList.add('bootstrap-dark');
-                document.body.classList.remove('bootstrap');
-                break;
-        }
+        if (theme === 'Dark') {
+            const htmlElement = document.querySelector('html');
+            htmlElement.setAttribute('data-bs-theme', 'dark');
+          } else {
+            const htmlElement = document.querySelector('html');
+            htmlElement.setAttribute('data-bs-theme', 'light');
+          }
+    };
+
+    const handleThreadNumberChange = (number) => {
+        setSelectedThreadNumber(number);
+        window.electron.saveSettings({ threadNumber: number });
     };
 
     return (
@@ -144,20 +120,20 @@ function Settings() {
                                         <h4><i className="bi bi-copy"></i> Download Thread</h4>
                                         <h6 className="text-muted mb-2" style={{ marginBottom: '-11px', marginTop: '-4px' }}>Select the number of shards you want to split. Increasing threads may speed up downloads, or it may slow down your computer.</h6>
                                     </div>
-                                    <div className="col-xl-5" style={{ textAlign: 'right', marginTop: '10px' }}>  
+                                    <div className="col-xl-5" style={{ textAlign: 'right', marginTop: '10px' }}>
                                         <Dropdown>
                                             <Dropdown.Toggle variant="primary" id="threadDropdown">
-                                                Let System Decide
+                                                {selectedThreadNumber}
                                             </Dropdown.Toggle>
 
                                             <Dropdown.Menu>
-                                                <Dropdown.Item>Let System Decide</Dropdown.Item>
-                                                <Dropdown.Item>2</Dropdown.Item>
-                                                <Dropdown.Item>4</Dropdown.Item>
-                                                <Dropdown.Item>6</Dropdown.Item>
-                                                <Dropdown.Item>8</Dropdown.Item>
-                                                <Dropdown.Item>16</Dropdown.Item>
-                                                <Dropdown.Item>32</Dropdown.Item>
+                                                {/* <Dropdown.Item onClick={() => handleThreadNumberChange('Let System Decide')}>Let System Decide</Dropdown.Item> */}
+                                                <Dropdown.Item onClick={() => handleThreadNumberChange('2')}>2</Dropdown.Item>
+                                                <Dropdown.Item onClick={() => handleThreadNumberChange('4')}>4</Dropdown.Item>
+                                                <Dropdown.Item onClick={() => handleThreadNumberChange('6')}>6</Dropdown.Item>
+                                                <Dropdown.Item onClick={() => handleThreadNumberChange('8')}>8</Dropdown.Item>
+                                                <Dropdown.Item onClick={() => handleThreadNumberChange('16')}>16</Dropdown.Item>
+                                                <Dropdown.Item onClick={() => handleThreadNumberChange('32')}>32</Dropdown.Item>
                                             </Dropdown.Menu>
                                         </Dropdown>
                                     </div>
@@ -174,6 +150,7 @@ function Settings() {
                                     </div>
                                 </div>
                             </div>
+                            <p>RDM Version: {version}</p>
                             <div className="row text-center">
                                 <div className="col">
                                     <button className="btn btn-primary" type="button"><i className="bi bi-save-fill"></i> Save</button>

@@ -9,9 +9,30 @@
   z-index: 1000;
 }
 
-::-webkit-scrollbar { 
-  /* width: 0px;  */
-  display: none;
+.scrollable-content{
+  height: calc(100vh - 100px);
+  overflow-y: auto;
+  padding-top: 60px;
+}
+
+/* WIP: This scrollbar should be under the nav bar.*/
+
+::-webkit-scrollbar {
+  display: none; /* Delete this if we want to show the scrollbar */
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; 
+}
+
+::-webkit-scrollbar-thumb {
+  background: #007BFF;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0056b3;
 }
 
 .App-logo {
@@ -57,7 +78,7 @@
 }
 
 .card {
-  background-color: #fff;
+  /* background-color: #fff; */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border-radius: 4px;
   padding: 20px;

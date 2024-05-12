@@ -82,7 +82,8 @@ let downloads = {};
  * @param {number} [numShards=4] - The number of file shards to download in parallel.
  * @returns {Promise<void>} - A promise that resolves when the download is complete or rejects on error.
  */
-async function downloadFile(url, onProgress, id, numShards = 4, resume = false) {
+async function downloadFile(url, onProgress, id, resume = false) {
+  const numShards = config.threadNumber || 4;
   console.log(`downloadFile called with id: ${id}`);
   try {
     console.log(`Starting download ${id}`);

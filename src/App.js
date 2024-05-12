@@ -7,12 +7,14 @@ import Settings from './pages/settings';
 import History from './pages/history';
 import { Button, Modal, Toast } from 'react-bootstrap';
 
+
 function HomePage() {
   const [urls, setUrls] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [newUrl, setNewUrl] = useState('');
   const [showClipboardToast, setShowClipboardToast] = useState(false); // State for clipboard toast
   const urlInputRef = useRef(null); // Ref for the input field
+  const [theme, setTheme] = useState(null);
 
   // Function to check if there's a URL in the clipboard
   const checkClipboard = async () => {
@@ -40,6 +42,17 @@ function HomePage() {
   };
 
   useEffect(() => {
+
+    const fetchTheme = async () => {
+      try {
+        const response = await window.electron.getSettings();
+        setTheme(response.theme);
+      } catch (error) {
+        console.error('Error fetching theme from settings:', error);
+      }
+    };
+    fetchTheme();
+
     checkClipboard();
 
     window.addEventListener('focus', handleWindowFocus);
@@ -89,6 +102,18 @@ function HomePage() {
     setUrls(prevUrls => prevUrls.filter(u => u !== url));
   };
 
+  if (theme === null) {
+    return <div>Loading...</div>;
+  }
+
+  if (theme === 'Dark') {
+    const htmlElement = document.querySelector('html');
+    htmlElement.setAttribute('data-bs-theme', 'dark');
+  } else {
+    const htmlElement = document.querySelector('html');
+    htmlElement.setAttribute('data-bs-theme', 'light');
+  }
+
   return (
     <div className="App">
       <Toast show={showClipboardToast} onClose={() => setShowClipboardToast(false)} style={{ position: 'fixed', top: '0', right: '0', margin: '1rem', zIndex: '10000' }}>
@@ -119,7 +144,7 @@ function HomePage() {
 
       <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
-          <Modal.Title>Enter Download URL</Modal.Title>
+          <Modal.Title><i class="bi bi-link-45deg"></i>  Enter Download URL</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <input ref={urlInputRef} type="text" value={newUrl} onChange={handleUrlChange} className="form-control" placeholder="Enter URL" />
@@ -129,7 +154,7 @@ function HomePage() {
             Cancel
           </Button>
           <Button variant="primary" onClick={handleDownload}>
-            Download
+            <i class="bi bi-download"></i>  Download
           </Button>
         </Modal.Footer>
       </Modal>
