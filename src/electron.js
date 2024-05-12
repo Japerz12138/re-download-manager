@@ -146,6 +146,7 @@ ipcMain.handle('get-settings', async () => {
   return settings;
 });
 
+//Don't delete this yet, we will use it later on Follow System theme
 ipcMain.on('apply-theme', (event, theme) => {
   switch (theme) {
     case 'Follow System':
