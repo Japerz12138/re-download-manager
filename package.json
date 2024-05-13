@@ -1,5 +1,8 @@
 {
   "name": "re-download-manager",
+  "author": {
+    "name": "Team RDM",
+    "email": "jackma12138@gmail.com"},
   "version": "0.1.0",
   "private": true,
   "productName": "Re Download Manager",
@@ -32,8 +35,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "rdm-server": "set ELECTRON_START_URL=http://localhost:3000 && electron .",
-    "rdm-build": "electron-builder build --mac --win -c.extraMetadata.main=build/main.js --publish never",
-    "rdm-publish": "electron-builder build --mac --win --publish always"
+    "rdm-build": "electron-builder build --win -c.extraMetadata.main=src/electron.js --publish never",
+    "rdm-publish": "electron-builder build --mac --win --publish always",
+    "package": "electron-builder build -c.extraMetadata.main=src/electron.js"
   },
   "eslintConfig": {
     "extends": [
@@ -58,5 +62,17 @@
     "electon": "^0.0.1-security",
     "electron": "^27.3.8",
     "electron-builder": "^24.6.4"
+  },
+  "build": {
+    "appId": "com.re-download-manager",
+    "files": [
+      "build/**/*",
+      "node_modules/**/*",
+      "public/**/*",
+      "src/**/*",
+      "package.json",
+      "package-lock.json",
+      "electron.js"
+    ]
   }
 }
