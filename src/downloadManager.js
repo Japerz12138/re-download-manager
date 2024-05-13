@@ -47,10 +47,9 @@ class ProgressStream extends stream.Transform {
     this.startTime = Date.now();
     this.speeds = [];
     this.avgSpeed = 0;
+    this.speedLimitKb = parseInt(config.speedLimit, 10);
   }
-
   _transform(chunk, encoding, callback) {
-
     this.totalBytes += chunk.length;
 
     const elapsedSeconds = Math.max((Date.now() - this.startTime) / 1000, 0.001);
@@ -71,6 +70,37 @@ class ProgressStream extends stream.Transform {
   }
 }
 
+
+// For Ethan's reference, here is the modified ProgressStream class with the speed limit functionality:
+//   _transform(chunk, encoding, callback) {
+//     this.totalBytes += chunk.length;
+
+//     const elapsedSeconds = Math.max((Date.now() - this.startTime) / 1000, 0.001);
+//     const downloadSpeed = this.totalBytes / elapsedSeconds;
+//     this.speeds.push(downloadSpeed);
+//     if (this.speeds.length > 1000) this.speeds.shift();
+//     const n = this.speeds.length;
+//     if (n === 1) {
+//       this.avgSpeed = downloadSpeed;
+//     } else {
+//       this.avgSpeed = downloadSpeed / (n - 1) + this.avgSpeed * (1 - 1 / (n - 1));
+//     }
+//     const remainingBytes = this.partSize - this.totalBytes;
+//     const eta = remainingBytes / (this.avgSpeed || 1);
+//     this.onProgress(this.totalBytes, this.avgSpeed, elapsedSeconds, eta, this.id);
+//     this.push(chunk);
+
+//     // Calculate the delay based on the speed limit and the size of the chunk
+//     let delay = 0;
+//     if (this.speedLimitKb > 0) {
+//       delay = (chunk.length / (this.speedLimitKb * 1024)) * 1000;
+//     }
+
+//     // Call the callback function after the delay
+//     setTimeout(callback, delay);
+//   }
+// }
+
 let downloads = {};
 
 /**
@@ -87,6 +117,7 @@ async function downloadFile(url, onProgress, id, resume = false) {
   console.log(`downloadFile called with id: ${id}`);
   try {
     console.log(`Starting download ${id}`);
+    console.log(`Speed Limit:  ${config.speedLimit}`);
     const CancelToken = axios.CancelToken;
     const source = CancelToken.source();
 
