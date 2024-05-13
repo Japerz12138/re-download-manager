@@ -83,9 +83,18 @@ app.on('ready', () => {
  * @param {string} id - The ID of the download.
  */
 ipcMain.on('start-download', (event, url, id, resume) => {
-  downloadFile(url, (downloadInfo) => {
-    event.sender.send('download-progress', { ...downloadInfo, id });
-  }, id, resume);
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading settings file', err);
+      return;
+    }
+    const settings = JSON.parse(data);
+    const speedLimitKb = settings.speedLimit;
+
+    downloadFile(url, (downloadInfo) => {
+      event.sender.send('download-progress', { ...downloadInfo, id });
+    }, id, resume, speedLimitKb);
+  });
 });
 
 ipcMain.on('cancel-download', (event, id) => {

@@ -2,7 +2,8 @@
   "name": "re-download-manager",
   "author": {
     "name": "Team RDM",
-    "email": "jackma12138@gmail.com"},
+    "email": "jackma12138@gmail.com"
+  },
   "version": "0.1.0",
   "private": true,
   "productName": "Re Download Manager",

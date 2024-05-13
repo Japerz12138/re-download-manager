@@ -8,6 +8,7 @@ function Settings() {
     const [selectedDirectoryPath, setSelectedDirectoryPath] = useState('');
     const [selectedTheme, setSelectedTheme] = useState('Dark');
     const [selectedThreadNumber, setSelectedThreadNumber] = useState('');
+    const [selectedSpeedLimit, setSelectedSpeedLimit] = useState(0);
     const fileInputRef = useRef(null);
     const [developerInfo, setDeveloperInfo] = useState('');
 
@@ -16,6 +17,7 @@ function Settings() {
             setSelectedDirectoryPath(settings.directoryPath);
             setSelectedTheme(settings.theme);
             setSelectedThreadNumber(settings.threadNumber);
+            setSelectedSpeedLimit(settings.speedLimit);
         });
     }, []);
 
@@ -59,6 +61,14 @@ function Settings() {
     const handleThreadNumberChange = (number) => {
         setSelectedThreadNumber(number);
         window.electron.saveSettings({ threadNumber: number });
+        setShowSavedToast(true);
+        setTimeout(() => setShowSavedToast(false), 2000);
+    };
+
+    const handleSpeedLimitChange = (event) => {
+        const speedLimit = event.target.value;
+        setSelectedSpeedLimit(speedLimit);
+        window.electron.saveSettings({ speedLimit: speedLimit });
         setShowSavedToast(true);
         setTimeout(() => setShowSavedToast(false), 2000);
     };
@@ -161,7 +171,15 @@ function Settings() {
                                         <h6 className="text-muted mb-2" style={{ marginBottom: '-11px', marginTop: '-4px' }}>Limit the download speed of individual files. (Set "0" to disable this function)</h6>
                                     </div>
                                     <div className="col-xl-5" style={{ textAlign: 'right', marginTop: '10px' }}>
-                                        <input class="form-control" type="text" style={{ paddingLeft: '0px', textAlign: 'right' }} placeholder="0" /><small style={{ marginLeft: '10px' }}>KB/s</small>
+                                        <input
+                                            class="form-control"
+                                            type="text"
+                                            style={{ paddingLeft: '0px', textAlign: 'right' }}
+                                            placeholder="0"
+                                            value={selectedSpeedLimit}
+                                            onChange={handleSpeedLimitChange}
+                                        />
+                                        <small style={{ marginLeft: '10px' }}>KB/s</small>
                                     </div>
                                 </div>
                             </div>
