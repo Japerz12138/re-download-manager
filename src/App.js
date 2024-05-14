@@ -7,16 +7,14 @@ import Settings from './pages/settings';
 import History from './pages/history';
 import { Button, Modal, Toast } from 'react-bootstrap';
 
-// Create a context for the home page state
 const HomePageContext = createContext();
 
-// Create a provider component that wraps your app and makes the home page state available to all child components
 function HomePageProvider({ children }) {
   const [urls, setUrls] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [newUrl, setNewUrl] = useState('');
-  const [showClipboardToast, setShowClipboardToast] = useState(false); // State for clipboard toast
-  const urlInputRef = useRef(null); // Ref for the input field
+  const [showClipboardToast, setShowClipboardToast] = useState(false);
+  const urlInputRef = useRef(null);
   const [theme, setTheme] = useState(null);
 
   return (
@@ -29,7 +27,6 @@ function HomePageProvider({ children }) {
   );
 }
 
-// Create a hook that allows any component to access the home page state
 function useHomePageState() {
   const context = useContext(HomePageContext);
   if (context === undefined) {
@@ -38,6 +35,11 @@ function useHomePageState() {
   return context;
 }
 
+/**
+ * Represents the home page component.
+ *
+ * @returns {JSX.Element} The rendered home page component.
+ */
 function HomePage() {
   const {
     urls, setUrls, showModal, setShowModal, newUrl, setNewUrl,
@@ -47,22 +49,21 @@ function HomePage() {
   const location = useLocation();
   const isVisible = location.pathname === '/';
 
-  // Function to check if there's a URL in the clipboard
+
   const checkClipboard = async () => {
     try {
       const text = await navigator.clipboard.readText();
       if (isValidURL(text)) {
         setNewUrl(text);
         setShowModal(true);
-        setShowClipboardToast(true); // Show clipboard toast
-        setTimeout(() => setShowClipboardToast(false), 3000); // Hide toast after 3 seconds
+        setShowClipboardToast(true);
+        setTimeout(() => setShowClipboardToast(false), 3000);
       }
     } catch (error) {
       console.error('Error reading clipboard:', error);
     }
   };
 
-  // Function to check if a string is a valid URL
   const isValidURL = (url) => {
     try {
       new URL(url);
@@ -92,7 +93,6 @@ function HomePage() {
     };
   }, []);
 
-  // Function to handle focus event on window
   const handleWindowFocus = () => {
     checkClipboard();
   };
@@ -150,7 +150,7 @@ function HomePage() {
         <Toast show={showClipboardToast} onClose={() => setShowClipboardToast(false)} style={{ position: 'fixed', top: '0', right: '0', margin: '1rem', zIndex: '10000' }}>
           <Toast.Body><i className="bi bi-clipboard-check"></i>  URL detected in clipboard!</Toast.Body>
         </Toast>
-  
+
         <div className="container" style={{ marginTop: '100px' }}>
           <div className="row">
             <div className="col">
@@ -168,11 +168,11 @@ function HomePage() {
             </div>
           </div>
         </div>
-  
+
         <Button className="fab-btn" onClick={handleOpenModal}>
           <i className="bi bi-plus"></i>
         </Button>
-  
+
         <Modal show={showModal} onHide={handleCloseModal}>
           <Modal.Header closeButton>
             <Modal.Title><i className="bi bi-link-45deg"></i>  Enter Download URL</Modal.Title>
