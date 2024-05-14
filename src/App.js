@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { HashRouter as Router, Route, Routes } from 'react-router-dom';
+import React, { useState, useEffect, useRef, createContext, useContext } from 'react';
+import { HashRouter as Router, Route, Routes, useLocation, Outlet } from 'react-router-dom';
 import './App.css';
 import Navbar from './Navbar';
 import DownloadComponent from './components/DownloadComponent';
@@ -7,31 +7,63 @@ import Settings from './pages/settings';
 import History from './pages/history';
 import { Button, Modal, Toast } from 'react-bootstrap';
 
+const HomePageContext = createContext();
 
-function HomePage() {
+function HomePageProvider({ children }) {
   const [urls, setUrls] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [newUrl, setNewUrl] = useState('');
-  const [showClipboardToast, setShowClipboardToast] = useState(false); // State for clipboard toast
-  const urlInputRef = useRef(null); // Ref for the input field
+  const [showClipboardToast, setShowClipboardToast] = useState(false);
+  const urlInputRef = useRef(null);
   const [theme, setTheme] = useState(null);
 
-  // Function to check if there's a URL in the clipboard
+  return (
+    <HomePageContext.Provider value={{
+      urls, setUrls, showModal, setShowModal, newUrl, setNewUrl,
+      showClipboardToast, setShowClipboardToast, urlInputRef, theme, setTheme
+    }}>
+      {children}
+    </HomePageContext.Provider>
+  );
+}
+
+function useHomePageState() {
+  const context = useContext(HomePageContext);
+  if (context === undefined) {
+    throw new Error('useHomePageState must be used within a HomePageProvider');
+  }
+  return context;
+}
+
+/**
+ * Represents the home page component.
+ *
+ * @returns {JSX.Element} The rendered home page component.
+ */
+function HomePage() {
+  const {
+    urls, setUrls, showModal, setShowModal, newUrl, setNewUrl,
+    showClipboardToast, setShowClipboardToast, urlInputRef, theme, setTheme
+  } = useHomePageState();
+
+  const location = useLocation();
+  const isVisible = location.pathname === '/';
+
+
   const checkClipboard = async () => {
     try {
       const text = await navigator.clipboard.readText();
       if (isValidURL(text)) {
         setNewUrl(text);
         setShowModal(true);
-        setShowClipboardToast(true); // Show clipboard toast
-        setTimeout(() => setShowClipboardToast(false), 3000); // Hide toast after 3 seconds
+        setShowClipboardToast(true);
+        setTimeout(() => setShowClipboardToast(false), 3000);
       }
     } catch (error) {
       console.error('Error reading clipboard:', error);
     }
   };
 
-  // Function to check if a string is a valid URL
   const isValidURL = (url) => {
     try {
       new URL(url);
@@ -42,7 +74,6 @@ function HomePage() {
   };
 
   useEffect(() => {
-
     const fetchTheme = async () => {
       try {
         const response = await window.electron.getSettings();
@@ -62,7 +93,6 @@ function HomePage() {
     };
   }, []);
 
-  // Function to handle focus event on window
   const handleWindowFocus = () => {
     checkClipboard();
   };
@@ -116,62 +146,68 @@ function HomePage() {
 
   return (
     <div className="App">
-      <Toast show={showClipboardToast} onClose={() => setShowClipboardToast(false)} style={{ position: 'fixed', top: '0', right: '0', margin: '1rem', zIndex: '10000' }}>
-        <Toast.Body><i class="bi bi-clipboard-check"></i>  URL detected in clipboard!</Toast.Body>
-      </Toast>
+      <div style={{ display: isVisible ? 'block' : 'none' }}>
+        <Toast show={showClipboardToast} onClose={() => setShowClipboardToast(false)} style={{ position: 'fixed', top: '0', right: '0', margin: '1rem', zIndex: '10000' }}>
+          <Toast.Body><i className="bi bi-clipboard-check"></i>  URL detected in clipboard!</Toast.Body>
+        </Toast>
 
-      <div className="container" style={{ marginTop: '100px' }}>
-        <div className="row">
-          <div className="col">
-            <div className="card" style={{ borderStyle: 'none' }}>
-              {/* Conditional rendering for displaying the message or cards */}
-              {urls.length === 0 && (
-                <div>
-                  <i className="bi bi-dropbox" style={{ fontSize: '2rem', color: 'grey' }}></i>
-                  <p className="fs-5 text-muted text-uppercase">Nothing Here</p>
-                  <p className="text-muted">Press + to start a download</p>
-                </div>
-              )}
-              {urls.map((url) => <DownloadComponent key={url} url={url} removeUrl={removeUrl} />)}
+        <div className="container" style={{ marginTop: '100px' }}>
+          <div className="row">
+            <div className="col">
+              <div className="card" style={{ borderStyle: 'none' }}>
+                {/* Conditional rendering for displaying the message or cards */}
+                {urls.length === 0 && (
+                  <div>
+                    <i className="bi bi-dropbox" style={{ fontSize: '2rem', color: 'grey' }}></i>
+                    <p className="fs-5 text-muted text-uppercase">Nothing Here</p>
+                    <p className="text-muted">Press + to start a download</p>
+                  </div>
+                )}
+                {urls.map((url) => <DownloadComponent key={url} url={url} removeUrl={removeUrl} />)}
+              </div>
             </div>
           </div>
         </div>
+
+        <Button className="fab-btn" onClick={handleOpenModal}>
+          <i className="bi bi-plus"></i>
+        </Button>
+
+        <Modal show={showModal} onHide={handleCloseModal}>
+          <Modal.Header closeButton>
+            <Modal.Title><i className="bi bi-link-45deg"></i>  Enter Download URL</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <input ref={urlInputRef} type="text" value={newUrl} onChange={handleUrlChange} className="form-control" placeholder="Enter URL" />
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleCloseModal}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleDownload}>
+              <i className="bi bi-download"></i>  Download
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </div>
-
-      <Button className="fab-btn" onClick={handleOpenModal}>
-        <i className="bi bi-plus"></i>
-      </Button>
-
-      <Modal show={showModal} onHide={handleCloseModal}>
-        <Modal.Header closeButton>
-          <Modal.Title><i class="bi bi-link-45deg"></i>  Enter Download URL</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <input ref={urlInputRef} type="text" value={newUrl} onChange={handleUrlChange} className="form-control" placeholder="Enter URL" />
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseModal}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleDownload}>
-            <i class="bi bi-download"></i>  Download
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <Outlet />
     </div>
   );
 }
 
 function App() {
   return (
-    <Router>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/history" element={<History />} />
-        <Route path="/settings" element={<Settings />} />
-      </Routes>
-    </Router>
+    <HomePageProvider>
+      <Router>
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<HomePage />}>
+            <Route path="history" element={<History />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Routes>
+      </Router>
+    </HomePageProvider>
   );
 }
 
