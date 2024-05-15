@@ -63,7 +63,6 @@ function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, sp
   const formattedETA = formatETA(parseInt(eta));
   const fileIcon = getFileIcon(fileName);
 
-  //Calculate the dynamic downloaded file size
   const downloadedBytes = (progress / 100) * parseInt(fileSize);
   const formattedDownloadedSize = formatFileSize(downloadedBytes);
 
@@ -73,10 +72,8 @@ function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, sp
     console.log(downloadFolderPath);
   };
 
-  // Add a new state for resumed download
   const [isDownloadResumed, setIsDownloadResumed] = useState(false);
 
-  // Use useEffect to listen for changes in isResumed prop
   useEffect(() => {
     if (isResumed) {
       setIsDownloadResumed(true);
