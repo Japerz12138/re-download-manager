@@ -91,9 +91,15 @@ ipcMain.on('start-download', (event, url, id, resume) => {
     const settings = JSON.parse(data);
     const speedLimitKb = settings.speedLimit;
 
-    downloadFile(url, (downloadInfo) => {
-      event.sender.send('download-progress', { ...downloadInfo, id });
-    }, id, resume, speedLimitKb);
+    if (resume) {
+      resumeDownload(id, (downloadInfo) => {
+        event.sender.send('download-progress', { ...downloadInfo, id });
+      }, speedLimitKb);
+    } else {
+      downloadFile(url, (downloadInfo) => {
+        event.sender.send('download-progress', { ...downloadInfo, id });
+      }, id, speedLimitKb);
+    }
   });
 });
 
@@ -106,7 +112,9 @@ ipcMain.on('pause-download', (event, id) => {
 });
 
 ipcMain.on('resume-download', (event, id) => {
-  resumeDownload(id);
+  resumeDownload(id, (downloadInfo) => {
+    event.sender.send('download-progress', { ...downloadInfo, id });
+  });
 });
 
 

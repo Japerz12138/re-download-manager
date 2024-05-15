@@ -9,14 +9,14 @@
  * @param {string} props.eta - The estimated time of arrival for the download to complete.
  * @returns {JSX.Element} The rendered DownloadProgress component.
  */
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 function getFileIcon(fileName) {
   const lastDotIndex = fileName.lastIndexOf('.');
   if (lastDotIndex === -1) {
-    return <i className="bi bi-file-earmark"></i>; // No file extension found
+    return <i className="bi bi-file-earmark"></i>;
   }
-  const extension = fileName.substring(lastDotIndex + 1).toLowerCase(); // Get the file extension
+  const extension = fileName.substring(lastDotIndex + 1).toLowerCase();
   switch (extension) {
     case 'png':
     case 'jpg':
@@ -73,6 +73,16 @@ function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, sp
     console.log(downloadFolderPath);
   };
 
+  // Add a new state for resumed download
+  const [isDownloadResumed, setIsDownloadResumed] = useState(false);
+
+  // Use useEffect to listen for changes in isResumed prop
+  useEffect(() => {
+    if (isResumed) {
+      setIsDownloadResumed(true);
+    }
+  }, [isResumed]);
+
   return (
     <div className="card-body text-start shadow" style={{ borderRadius: '12px', borderTopLeftRadius: '-1px', opacity: '1', borderColor: 'rgb(0,128,255)', marginBottom: '18px' }}>
       <div className="row">
@@ -86,30 +96,29 @@ function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, sp
             <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={handleOpenFolder}>
               <i className="bi bi-folder" style={{ fontSize: '1.3rem' }}></i>
             </button>
-            ) : isPaused ? (
-              <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={resumeDownload}>
-                <i className="bi bi-play-fill" style={{ fontSize: '1.5rem' }}></i>
-              </button>
-            ) : (
+          ) : isPaused ? (
+            <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={resumeDownload}>
+              <i className="bi bi-play-fill" style={{ fontSize: '1.5rem' }}></i>
+            </button>
+          ) : (
             <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={pauseDownload}>
               <i className="bi bi-pause" style={{ fontSize: '1.5rem' }}></i>
             </button>
           )}
           <button className="btn btn-danger shadow" type="button" style={{ borderRadius: '33px', height: '42px', width: '42px', borderColor: 'rgba(255,255,255,0)', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={cancelDownload}>
-            <i class="bi bi-x" style={{ fontSize: '1.5rem' }}></i>
+            <i className="bi bi-x" style={{ fontSize: '1.5rem' }}></i>
           </button>
         </div>
       </div>
       <div className="row">
         <div className="col">
-          {/* Conditional rendering to display "PAUSED" when the download is paused */}
-          {isPaused ? (
+          {isPaused && !isDownloadResumed ? (
             <div className="progress" style={{ borderRadius: '68px' }}>
               <div className="progress-bar bg-warning" role="progressbar" style={{ width: '100%' }} aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">PAUSED</div>
             </div>
           ) : (
             <div className="progress" style={{ borderRadius: '68px' }}>
-              <div className={`progress-bar ${progress === 100 ? 'bg-success' : 'progress-bar-striped progress-bar-animated'}`} aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100" style={{ width: `${progress}%` }}>{roundedProgress}%</div>
+              <div className={`progress-bar ${roundedProgress === 100 ? 'bg-success' : 'progress-bar-striped progress-bar-animated'}`} aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100" style={{ width: `${progress}%` }}>{roundedProgress}%</div>
             </div>
           )}
         </div>

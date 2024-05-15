@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DownloadProgress from './DownloadProgress';
-
+/**
+ * Represents a component for downloading files.
+ *
+ * @param {Object} props - The component props.
+ * @param {string} props.url - The URL of the file to download.
+ * @param {Function} props.removeUrl - The function to remove the URL from the download list.
+ * @returns {JSX.Element} The DownloadComponent JSX element.
+ */
 function DownloadComponent({ url, removeUrl }) {
   const [downloadInfo, setDownloadInfo] = useState({
     shardProgress: [0, 0, 0, 0],
@@ -22,7 +29,7 @@ function DownloadComponent({ url, removeUrl }) {
     if (currentDownload.current.id !== null) {
       window.electron.offDownloadProgress(currentDownload.current.id);
     }
-    const id = Date.now();
+    const id = isResumed ? currentDownload.current.id : Date.now();
     console.log(`Generated id: ${id}`);
     currentDownload.current = { url, id };
     let isMounted = true;
@@ -39,13 +46,15 @@ function DownloadComponent({ url, removeUrl }) {
       }));
     };
     window.electron.onDownloadProgress(id, handleDownloadProgress.current);
-    window.electron.startDownload(url, id, isPaused);
-    console.log(`Starting download with id: ${id}`);
+    if (!isResumed) { 
+      window.electron.startDownload(url, id, isPaused);
+      console.log(`Starting download with id: ${id}`);
+    }
     return () => {
       isMounted = false;
       window.electron.offDownloadProgress(id);
     };
-  }, [url]);
+  }, [url, isResumed]);
 
 
   useEffect(() => {
@@ -76,9 +85,10 @@ function DownloadComponent({ url, removeUrl }) {
 
   const resumeDownload = () => {
     setIsResumed(true);
+    setIsPaused(false);
     console.log(`isResumed set to: ${isResumed}`);
     console.log(`Request to resume download with id: ${currentDownload.current.id}`);
-    window.electron.resumeDownload(currentDownload.current.id);
+    window.electron.resumeDownload(currentDownload.current.id, handleDownloadProgress.current);
     console.log('Download resumed');
   };
 
