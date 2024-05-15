@@ -37,6 +37,7 @@ try {
 
 app.on('ready', () => app.setAppUserModelId(app.name));
 
+//i need to remember to make this window less stupid - ethan
 class ProgressStream extends stream.Transform {
   constructor(onProgress, partSize, id) {
     super();
@@ -143,14 +144,14 @@ async function downloadFile(url, onProgress, id, resume = false) {
       totalSpeeds = Array(numShards).fill(0);
     }
 
-    downloads[id] = { 
-      streams: [], 
-      tempFilePaths: [], 
+    downloads[id] = {
+      streams: [],
+      tempFilePaths: [],
       numShards: numShards,
       url: url,
-      cancelSource: source, 
-      isCancelled: false, 
-      totalDownloadedBytes: totalDownloadedBytes 
+      cancelSource: source,
+      isCancelled: false,
+      totalDownloadedBytes: totalDownloadedBytes
     };
 
     const promises = Array.from({ length: numShards }, async (_, i) => {
@@ -248,13 +249,11 @@ async function downloadFile(url, onProgress, id, resume = false) {
         resolve();
       }));
 
-      for (const tempFilePath of tempFilePaths) {
-        console.log(`Deleting temporary file ${tempFilePath} for download ${id}`);
-        try {
-          await fs.promises.unlink(tempFilePath);
-        } catch (err) {
-          console.error(`Failed to delete file ${tempFilePath}: ${err}`);
-        }
+      const tempDirectoryPath = path.join(__dirname, 'temp', id.toString());
+      try {
+        await fs.promises.rem(tempDirectoryPath, { recursive: true });
+      } catch (err) {
+        console.error(`Failed to delete directory ${tempDirectoryPath}: ${err}`);
       }
 
       console.log(`Deleting download ${id} from downloads object`);
@@ -281,6 +280,11 @@ showNotification = ($title, $body) => {
   }).show()
 }
 
+/**
+ * Pauses a download by cancelling ongoing streams, saving the download state, and marking it as paused.
+ * @param {number} id - The ID of the download to pause.
+ * @returns {Promise<void>} - A promise that resolves once the download is paused.
+ */
 async function pauseDownload(id) {
   if (downloads[id]) {
     console.log(`Pausing download ${id}`);
@@ -305,14 +309,20 @@ async function pauseDownload(id) {
     const stateFilePath = path.join(__dirname, 'temp', id.toString(), `${id}-state.json`);
     await fs.promises.writeFile(stateFilePath, JSON.stringify(downloadState));
     console.log(`Download ${id} paused`);
-    downloads[id].cancelSource.cancel(); 
+    downloads[id].cancelSource.cancel();
   }
 }
 
-//tested and working resume-from-state setup
-//uploading this before I break everything with component-from-state LOL
 
-async function resumeDownload(id) {
+/**
+ * Resumes a download based on the provided ID.
+ *
+ * @param {string} id - The ID of the download.
+ * @param {Function} onProgress - The callback function to track the progress of the download.
+ * @returns {Promise<void>} - A promise that resolves when the download is complete.
+ * @throws {Error} - If no saved state file is found for the download.
+ */
+async function resumeDownload(id, onProgress) {
   id = id.toString();
   const stateFilePath = path.join(__dirname, 'temp', id, `${id}-state.json`);
   if (!fs.existsSync(stateFilePath)) {
@@ -323,9 +333,13 @@ async function resumeDownload(id) {
 
   const { url, fileSize, numShards, totalBytesDownloaded } = downloadState;
   const partSize = Math.floor(fileSize / numShards);
+  const lastPartSize = fileSize - partSize * (numShards - 1);
+  const fileName = path.basename(url);
+  const totalDownloadedBytes = [...totalBytesDownloaded];
+  const totalSpeeds = Array(numShards).fill(0);
 
   const promises = Array.from({ length: numShards }, async (_, i) => {
-    const start = i * partSize + (totalBytesDownloaded[i] || 0);
+    const start = i * partSize + (totalDownloadedBytes[i] || 0);
     const end = i === numShards - 1 ? fileSize - 1 : (i + 1) * partSize - 1;
     console.log(`Shard ${i}: start = ${start}, end = ${end}`);
 
@@ -333,7 +347,7 @@ async function resumeDownload(id) {
       console.error(`Invalid byte range: start (${start}) is greater than or equal to end (${end})`);
       return;
     }
-    
+
     if (end >= fileSize) {
       console.error(`Invalid byte range: end (${end}) is greater than or equal to fileSize (${fileSize})`);
       end = fileSize - 1;
@@ -344,9 +358,47 @@ async function resumeDownload(id) {
       responseType: 'stream',
     });
 
+    const currentPartSize = i === numShards - 1 ? lastPartSize : partSize;
+    let previousDownloadedBytes = 0;
+    
+    const progressStream = new ProgressStream((downloadedBytes, shardDownloadSpeed, elapsedSeconds, shardEta) => {
+      const deltaDownloadedBytes = downloadedBytes - previousDownloadedBytes;
+      totalDownloadedBytes[i] += deltaDownloadedBytes;
+      previousDownloadedBytes = downloadedBytes;
+    
+      const downloadSpeedMBps = Math.round((shardDownloadSpeed / (1024 * 1024)) * 10) / 10;
+      totalSpeeds[i] = downloadSpeedMBps;
+      const totalDownloaded = totalDownloadedBytes.reduce((a, b) => a + b, 0);
+      const percentCompleted = Math.round((totalDownloaded * 100) / fileSize);
+      const totalSpeed = totalSpeeds.reduce((a, b) => a + b, 0);
+      const remainingBytes = fileSize - totalDownloaded;
+      const eta = remainingBytes / ((totalSpeed * 1024 * 1024) || 1);
+      onProgress({
+        id,
+        shardIndex: i,
+        progress: percentCompleted,
+        fileName,
+        fileSize,
+        speed: Math.round(totalSpeed * 10) / 10,
+        eta: Math.round(eta),
+      });
+    }, currentPartSize, id);
+    
+    progressStream.on('end', () => {
+      onProgress({
+        id,
+        shardIndex: i,
+        progress: 100,
+        fileName,
+        fileSize,
+        speed: 0,
+        eta: 0,
+      });
+    });
+
     const writer = fs.createWriteStream(path.join(__dirname, 'temp', id, `shard-${i}`), { flags: 'a' });
 
-    response.data.pipe(writer);
+    response.data.pipe(progressStream).pipe(writer);
 
     return new Promise((resolve, reject) => {
       writer.on('finish', resolve);
@@ -385,13 +437,11 @@ async function resumeDownload(id) {
     resolve();
   }));
 
-  for (let i = 0; i < numShards; i++) {
-    const tempFilePath = path.join(__dirname, 'temp', id, `shard-${i}`);
-    try {
-      await fs.promises.unlink(tempFilePath);
-    } catch (err) {
-      console.error(`Failed to delete file ${tempFilePath}: ${err}`);
-    }
+  const tempDirectoryPath = path.join(__dirname, 'temp', id.toString());
+  try {
+    await fs.promises.rm(tempDirectoryPath, { recursive: true });
+  } catch (err) {
+    console.error(`Failed to delete directory ${tempDirectoryPath}: ${err}`);
   }
 }
 
