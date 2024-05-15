@@ -4,6 +4,7 @@ import './App.css';
 import Navbar from './Navbar';
 import DownloadComponent from './components/DownloadComponent';
 import Settings from './pages/settings';
+import { settingsChangedEvent } from './pages/settings';
 import History from './pages/history';
 import { Button, Modal, Toast } from 'react-bootstrap';
 
@@ -83,15 +84,29 @@ function HomePage() {
       }
     };
     fetchTheme();
-
-    checkClipboard();
-
-    window.addEventListener('focus', handleWindowFocus);
-
+  
+    const handleSettingsChange = ({ setting, value }) => {
+      if (setting === 'theme') {
+        setTheme(value);
+      }
+    };
+  
+    settingsChangedEvent.on('settingsChanged', handleSettingsChange);
+  
     return () => {
-      window.removeEventListener('focus', handleWindowFocus);
+      settingsChangedEvent.off('settingsChanged', handleSettingsChange);
     };
   }, []);
+
+useEffect(() => {
+  if (theme === 'Dark') {
+    const htmlElement = document.querySelector('html');
+    htmlElement.setAttribute('data-bs-theme', 'dark');
+  } else {
+    const htmlElement = document.querySelector('html');
+    htmlElement.setAttribute('data-bs-theme', 'light');
+  }
+}, [theme]);
 
   const handleWindowFocus = () => {
     checkClipboard();
@@ -197,8 +212,8 @@ function HomePage() {
 
 function App() {
   return (
-    <HomePageProvider>
-      <Router>
+    <Router>
+      <HomePageProvider>
         <Navbar />
         <Routes>
           <Route path="/" element={<HomePage />}>
@@ -206,8 +221,8 @@ function App() {
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
-      </Router>
-    </HomePageProvider>
+      </HomePageProvider>
+    </Router>
   );
 }
 
