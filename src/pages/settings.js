@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { EventEmitter } from 'events';
 import { Dropdown, Toast } from 'react-bootstrap';
 const { version } = require('../../package.json');
+
+export const settingsChangedEvent = new EventEmitter();
 
 function Settings() {
 
@@ -35,6 +38,7 @@ function Settings() {
             window.electron.saveSettings({ directoryPath: path });
             setShowSavedToast(true);
             setTimeout(() => setShowSavedToast(false), 2000);
+            settingsChangedEvent.emit('settingsChanged', { setting: 'directoryPath', value: path });
         }
     };
 
@@ -56,6 +60,8 @@ function Settings() {
             const htmlElement = document.querySelector('html');
             htmlElement.setAttribute('data-bs-theme', 'light');
         }
+
+        settingsChangedEvent.emit('settingsChanged', { setting: 'theme', value: theme });
     };
 
     const handleThreadNumberChange = (number) => {
@@ -63,6 +69,7 @@ function Settings() {
         window.electron.saveSettings({ threadNumber: number });
         setShowSavedToast(true);
         setTimeout(() => setShowSavedToast(false), 2000);
+        settingsChangedEvent.emit('settingsChanged', { setting: 'threadNumber', value: number });
     };
 
     const handleSpeedLimitChange = (event) => {
@@ -71,6 +78,7 @@ function Settings() {
         window.electron.saveSettings({ speedLimit: speedLimit });
         setShowSavedToast(true);
         setTimeout(() => setShowSavedToast(false), 2000);
+        settingsChangedEvent.emit('settingsChanged', { setting: 'speedLimit', value: speedLimit });
     };
 
     return (
