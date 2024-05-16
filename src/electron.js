@@ -122,9 +122,14 @@ ipcMain.on('resume-download', (event, id) => {
 
 ipcMain.on('save-settings', (event, newSettings) => {
   const filePath = path.join(app.getPath('userData'), 'settings.json');
+  const defaultSettings = { 
+    directoryPath: path.join(os.homedir(), 'Downloads'),
+    theme: 'Follow System',
+    threadNumber: '4',
+  };
 
   if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify(newSettings, null, 2), 'utf8');
+    fs.writeFileSync(filePath, JSON.stringify({ ...defaultSettings, ...newSettings }, null, 2), 'utf8');
     console.log('Settings file created successfully');
     return;
   }
