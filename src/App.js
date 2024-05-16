@@ -85,6 +85,10 @@ function HomePage() {
       }
     };
     fetchTheme();
+
+    checkClipboard();
+
+    window.addEventListener('focus', handleWindowFocus);
   
     const handleSettingsChange = ({ setting, value }) => {
       if (setting === 'theme') {
@@ -95,6 +99,7 @@ function HomePage() {
     settingsChangedEvent.on('settingsChanged', handleSettingsChange);
   
     return () => {
+      window.removeEventListener('focus', handleWindowFocus);
       settingsChangedEvent.off('settingsChanged', handleSettingsChange);
     };
   }, []);
