@@ -6,7 +6,7 @@ import DownloadComponent from './components/DownloadComponent';
 import Settings from './pages/settings';
 import { settingsChangedEvent } from './pages/settings';
 import History from './pages/history';
-import { Button, Modal, Toast } from 'react-bootstrap';
+import { Button, Modal, Toast, FloatingLabel } from 'react-bootstrap';
 
 const HomePageContext = createContext();
 
@@ -79,6 +79,7 @@ function HomePage() {
       try {
         const response = await window.electron.getSettings();
         setTheme(response.theme);
+        document.documentElement.style.setProperty('--main-color', response.color);
       } catch (error) {
         console.error('Error fetching theme from settings:', error);
       }
@@ -184,9 +185,11 @@ useEffect(() => {
           </div>
         </div>
 
-        <Button className="fab-btn" onClick={handleOpenModal}>
-          <i className="bi bi-plus"></i>
-        </Button>
+        <FloatingLabel controlId="floatingButton" label="">
+          <Button className="fab-btn" onClick={handleOpenModal}>
+            <i className="bi bi-plus"></i>
+          </Button>
+        </FloatingLabel>
 
         <Modal show={showModal} onHide={handleCloseModal}>
           <Modal.Header closeButton>

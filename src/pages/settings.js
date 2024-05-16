@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { EventEmitter } from 'events';
-import { Dropdown, Toast } from 'react-bootstrap';
+import { Form, Dropdown, Toast } from 'react-bootstrap';
 const { version } = require('../../package.json');
 
 export const settingsChangedEvent = new EventEmitter();
@@ -12,6 +12,7 @@ function Settings() {
     const [selectedTheme, setSelectedTheme] = useState('Dark');
     const [selectedThreadNumber, setSelectedThreadNumber] = useState('');
     const [selectedSpeedLimit, setSelectedSpeedLimit] = useState(0);
+    const [selectedColor, setSelectedColor] = useState('#007bff');
     const fileInputRef = useRef(null);
     const [developerInfo, setDeveloperInfo] = useState('');
 
@@ -21,6 +22,7 @@ function Settings() {
             setSelectedTheme(settings.theme);
             setSelectedThreadNumber(settings.threadNumber);
             setSelectedSpeedLimit(settings.speedLimit);
+            setSelectedColor(settings.color);
         });
     }, []);
 
@@ -79,6 +81,14 @@ function Settings() {
         setShowSavedToast(true);
         setTimeout(() => setShowSavedToast(false), 2000);
         settingsChangedEvent.emit('settingsChanged', { setting: 'speedLimit', value: speedLimit });
+    };
+
+    const handleColorChange = (event) => {
+        setSelectedColor(event.target.value); // Update color when user selects a new color
+        window.electron.saveSettings({ color: event.target.value }); // Save new color to settings
+        setShowSavedToast(true);
+        setTimeout(() => setShowSavedToast(false), 2000);
+        document.documentElement.style.setProperty('--main-color', event.target.value);
     };
 
     return (
@@ -144,6 +154,19 @@ function Settings() {
                                                 <Dropdown.Item onClick={() => handleThemeChange('Dark')}>Dark</Dropdown.Item>
                                             </Dropdown.Menu>
                                         </Dropdown>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="card-body text-start shadow" style={{ borderRadius: '12px', borderTopLeftRadius: '-1px', opacity: '1', borderColor: 'rgb(0,128,255)', marginBottom: '18px' }}>
+                                <div className="row">
+                                    <div className="col-xl-7">
+                                        <h4><i class="bi bi-palette"></i> Color</h4>
+                                        <h6 className="text-muted mb-2" style={{ marginBottom: '-11px', marginTop: '-4px' }}>Change the color of RDM</h6>
+                                    </div>
+                                    <div className="col-xl-5" style={{ textAlign: 'right', marginTop: '10px' }}>
+                                        <Form.Group controlId="formColorPicker" className="d-flex justify-content-end">
+                                            <Form.Control type="color" value={selectedColor} onChange={handleColorChange} />
+                                        </Form.Group>
                                     </div>
                                 </div>
                             </div>

@@ -70,7 +70,9 @@ app.on('ready', () => {
       ipcMain.emit('save-settings', null, { 
         directoryPath: path.join(os.homedir(), 'Downloads'),
         theme: 'Follow System',
-        threadNumber: '4'
+        threadNumber: '4',
+        color: "#0D6EFD",
+        speedLimit: "0"
       });
     }
   });

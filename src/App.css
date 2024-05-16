@@ -2,6 +2,67 @@
   text-align: center;
 }
 
+:root {
+  --main-color: #007bff;
+}
+
+.btn-primary{
+  background-color: var(--main-color);
+  border-color: var(--main-color);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--main-color);
+  border-color: var(--main-color);
+  filter: brightness(80%);
+}
+
+.btn-primary:not(:disabled):not(.disabled):active,
+.btn-primary:not(:disabled):not(.disabled).active,
+.show > .btn-primary.dropdown-toggle {
+  background-color: var(--main-color);
+  border-color: var(--main-color);
+  filter: brightness(80%);
+}
+
+.navbar-dark .navbar-nav .nav-link:hover,
+.navbar-dark .navbar-nav .nav-link:focus {
+  color: rgba(255, 255, 255, 0.75);
+  filter: brightness(80%);
+}
+
+.button.is-ghost:hover {
+  background: hsl(0, 0%, 100%, 0.3);
+  filter: brightness(80%);
+}
+
+.fab-btn {
+  background-color: var(--main-color);
+}
+
+.fab-btn:hover {
+  background-color: var(--main-color);
+  filter: brightness(80%);
+}
+
+.navbar {
+  background-color: var(--main-color);
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: #fff;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover,
+.navbar-dark .navbar-nav .nav-link:focus {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.bg-primary {
+  background-color: var(--main-color);
+}
+
 .History {
   text-align: center;
 }
@@ -31,12 +92,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #007BFF;
+  background: var(--main-color);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #0056b3;
+  background: var(--main-color);
 }
 
 .App-logo {
@@ -62,7 +123,6 @@
 }
 
 .header {
-  background-color: #0b83f4;
   position: relative;
   top: 0;
   left: 0;
@@ -90,10 +150,6 @@
 
 .button {
   margin-right: 20px;
-}
-
-.App-link {
-  color: #0b83f4;
 }
 
 @keyframes App-logo-spin {
@@ -133,7 +189,6 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background-color: #007bff;
   border: none;
   box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
   color: white;
@@ -143,8 +198,4 @@
   justify-content: center;
   cursor: pointer;
   transition: background-color 0.3s ease;
-}
-
-.fab-btn:hover {
-  background-color: #0056b3;
 }
