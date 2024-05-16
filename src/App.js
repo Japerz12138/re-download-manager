@@ -12,6 +12,7 @@ const HomePageContext = createContext();
 
 function HomePageProvider({ children }) {
   const [urls, setUrls] = useState([]);
+  const [pausedDownloads, setPausedDownloads] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [newUrl, setNewUrl] = useState('');
   const [showClipboardToast, setShowClipboardToast] = useState(false);
@@ -21,7 +22,8 @@ function HomePageProvider({ children }) {
   return (
     <HomePageContext.Provider value={{
       urls, setUrls, showModal, setShowModal, newUrl, setNewUrl,
-      showClipboardToast, setShowClipboardToast, urlInputRef, theme, setTheme
+      showClipboardToast, setShowClipboardToast, urlInputRef, theme, setTheme,
+      pausedDownloads, setPausedDownloads
     }}>
       {children}
     </HomePageContext.Provider>
@@ -44,7 +46,8 @@ function useHomePageState() {
 function HomePage() {
   const {
     urls, setUrls, showModal, setShowModal, newUrl, setNewUrl,
-    showClipboardToast, setShowClipboardToast, urlInputRef, theme, setTheme
+    showClipboardToast, setShowClipboardToast, urlInputRef, theme, setTheme,
+    pausedDownloads, setPausedDownloads
   } = useHomePageState();
 
   const location = useLocation();
@@ -75,6 +78,18 @@ function HomePage() {
   };
 
   useEffect(() => {
+    const loadPausedDownloads = async () => {
+      try {
+        const paused = await window.electron.getPausedDownloads();
+        setPausedDownloads(paused);
+      } catch (error) {
+        console.error('Error loading paused downloads:', error);
+      }
+    };
+    loadPausedDownloads();
+  }, []);
+
+  useEffect(() => {
     const fetchTheme = async () => {
       try {
         const response = await window.electron.getSettings();
@@ -89,30 +104,32 @@ function HomePage() {
     checkClipboard();
 
     window.addEventListener('focus', handleWindowFocus);
-  
+
     const handleSettingsChange = ({ setting, value }) => {
       if (setting === 'theme') {
         setTheme(value);
       }
     };
-  
+
     settingsChangedEvent.on('settingsChanged', handleSettingsChange);
-  
+
     return () => {
       window.removeEventListener('focus', handleWindowFocus);
       settingsChangedEvent.off('settingsChanged', handleSettingsChange);
     };
   }, []);
 
-useEffect(() => {
-  if (theme === 'Dark') {
-    const htmlElement = document.querySelector('html');
-    htmlElement.setAttribute('data-bs-theme', 'dark');
-  } else {
-    const htmlElement = document.querySelector('html');
-    htmlElement.setAttribute('data-bs-theme', 'light');
-  }
-}, [theme]);
+
+
+  useEffect(() => {
+    if (theme === 'Dark') {
+      const htmlElement = document.querySelector('html');
+      htmlElement.setAttribute('data-bs-theme', 'dark');
+    } else {
+      const htmlElement = document.querySelector('html');
+      htmlElement.setAttribute('data-bs-theme', 'light');
+    }
+  }, [theme]);
 
   const handleWindowFocus = () => {
     checkClipboard();
@@ -151,8 +168,9 @@ useEffect(() => {
 
   const removeUrl = (url) => {
     setUrls(prevUrls => prevUrls.filter(u => u !== url));
+    setPausedDownloads(prevDownloads => prevDownloads.filter(download => download.url !== url));
   };
-
+  
   if (theme === null) {
     return <div>Loading...</div>;
   }
@@ -177,7 +195,7 @@ useEffect(() => {
             <div className="col">
               <div className="card" style={{ borderStyle: 'none' }}>
                 {/* Conditional rendering for displaying the message or cards */}
-                {urls.length === 0 && (
+                {urls.length === 0 && pausedDownloads.length === 0 && (
                   <div>
                     <i className="bi bi-dropbox" style={{ fontSize: '2rem', color: 'grey' }}></i>
                     <p className="fs-5 text-muted text-uppercase">Nothing Here</p>
@@ -185,6 +203,9 @@ useEffect(() => {
                   </div>
                 )}
                 {urls.map((url) => <DownloadComponent key={url} url={url} removeUrl={removeUrl} />)}
+                {pausedDownloads.map(download => (
+                  <DownloadComponent key={download.id} url={download.url} initialState={download} removeUrl={removeUrl} />
+                ))}
               </div>
             </div>
           </div>
