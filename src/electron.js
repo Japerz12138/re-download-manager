@@ -6,7 +6,8 @@ const fs = require('fs');
 const os = require('os');
 const url = require('url');
 
-const filePath = path.join(app.getPath('userData'), 'settings.json');
+const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+const historyPath = path.join(app.getPath('userData'), 'history.json');
 const tempPath = './src/temp';
 
 //Disable hardware acceleration to prevent rendering issues
@@ -66,7 +67,8 @@ app.on('activate', () => {
 
 
 app.on('ready', () => {
-  fs.readFile(filePath, 'utf8', (err, data) => {
+  ipcMain.emit('create-history');
+  fs.readFile(settingsPath, 'utf8', (err, data) => {
     if (err || data.length === 0) {
       ipcMain.emit('save-settings', null, {
         directoryPath: path.join(os.homedir(), 'Downloads'),
@@ -86,7 +88,7 @@ app.on('ready', () => {
  * @param {string} id - The ID of the download.
  */
 ipcMain.on('start-download', (event, url, id, resume) => {
-  fs.readFile(filePath, 'utf8', (err, data) => {
+  fs.readFile(settingsPath, 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading settings file', err);
       return;
@@ -148,20 +150,19 @@ ipcMain.on('resume-download', (event, id) => {
  */
 
 ipcMain.on('save-settings', (event, newSettings) => {
-  const filePath = path.join(app.getPath('userData'), 'settings.json');
   const defaultSettings = {
     directoryPath: path.join(os.homedir(), 'Downloads'),
     theme: 'Follow System',
     threadNumber: '4',
   };
 
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify({ ...defaultSettings, ...newSettings }, null, 2), 'utf8');
+  if (!fs.existsSync(settingsPath)) {
+    fs.writeFileSync(settingsPath, JSON.stringify({ ...defaultSettings, ...newSettings }, null, 2), 'utf8');
     console.log('Settings file created successfully');
     return;
   }
 
-  fs.readFile(filePath, (err, data) => {
+  fs.readFile(settingsPath, (err, data) => {
     if (err) {
       console.error('Error reading settings file', err);
       return;
@@ -170,7 +171,7 @@ ipcMain.on('save-settings', (event, newSettings) => {
     const existingSettings = JSON.parse(data);
     const settings = { ...existingSettings, ...newSettings };
 
-    fs.writeFile(filePath, JSON.stringify(settings, null, 2), (err) => {
+    fs.writeFile(settingsPath, JSON.stringify(settings, null, 2), (err) => {
       if (err) {
         console.error('Error writing settings file', err);
       } else {
@@ -193,8 +194,7 @@ ipcMain.handle('get-paused-downloads', async () => {
  * @returns {Promise<object>} A promise that resolves to an object containing the current settings.
  */
 ipcMain.handle('get-settings', async () => {
-  const filePath = path.join(app.getPath('userData'), 'settings.json');
-  if (!fs.existsSync(filePath)) {
+  if (!fs.existsSync(settingsPath)) {
     return {
       directoryPath: path.join(os.homedir(), 'Downloads'),
       theme: 'Follow System',
@@ -202,10 +202,47 @@ ipcMain.handle('get-settings', async () => {
     };
   }
 
-  const data = fs.readFileSync(filePath, 'utf8');
+  const data = fs.readFileSync(settingsPath, 'utf8');
   const settings = JSON.parse(data);
 
   return settings;
+});
+
+/**
+ * Listens for the 'create-history' event and generates a new history file if one doesnt exist.
+ * @param {object} event - The event object.
+ */
+ipcMain.on('clear-history', (event) => {
+  if (fs.existsSync(historyPath)) {
+    fs.writeFileSync(historyPath, JSON.stringify([], null, 2), 'utf8');
+    console.log('History file cleared successfully');
+  } else {
+    console.log('History file does not exist');
+  }
+});
+
+/**
+ * Listens for the 'clear-history' event and clears the existing history file if one exists.
+ * @param {object} event - The event object.
+ */
+ipcMain.on('clear-history', (event) => {
+  fs.writeFileSync(historyPath, JSON.stringify([], null, 2), 'utf8');
+  console.log('History file cleared successfully');
+});
+
+/**
+ * Handles the 'get-history' event and returns the current history.
+ * @returns {Promise<object>} A promise that resolves to an object containing the current history.
+ */
+ipcMain.handle('get-history', async () => {
+  if (!fs.existsSync(historyPath)) {
+    return [];
+  }
+
+  const data = fs.readFileSync(historyPath, 'utf8');
+  const history = JSON.parse(data);
+
+  return history;
 });
 
 //Don't delete this yet, we will use it later on Follow System theme
