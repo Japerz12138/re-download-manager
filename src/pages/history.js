@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 function History() {
     return (
-        <div className='History'>
+        <div className='History transAnimation'>
             <div className="container" style={{ marginTop: '100px' }}>
                 <div className="row">
                     <div className="col">

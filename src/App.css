@@ -1,5 +1,18 @@
-.App {
+.App{
   text-align: center;
+}
+
+.History{
+  text-align: center;
+}
+
+.transAnimation{
+  animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 :root {
@@ -11,7 +24,12 @@
   border-color: var(--main-color);
 }
 
-.btn-primary:hover,
+.btn-primary:hover {
+  background-color: var(--main-color);
+  border-color: var(--main-color);
+  filter: brightness(90%);
+}
+
 .btn-primary:focus {
   background-color: var(--main-color);
   border-color: var(--main-color);
@@ -61,10 +79,6 @@
 
 .bg-primary {
   background-color: var(--main-color);
-}
-
-.History {
-  text-align: center;
 }
 
 .navbar {

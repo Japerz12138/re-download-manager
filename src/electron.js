@@ -230,3 +230,7 @@ ipcMain.on('apply-theme', (event, theme) => {
       break;
   }
 });
+
+ipcMain.handle('get-download-path', () => {
+  return path.join(os.homedir(), 'Downloads');
+});
