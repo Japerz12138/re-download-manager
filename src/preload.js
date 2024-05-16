@@ -10,12 +10,29 @@ const listeners = new Map();
 contextBridge.exposeInMainWorld(
   'electron',
   {
+
+    /**
+     * Sends a message to the main process to save settings.
+     * @param {object} settings - The settings to be saved.
+     */
     saveSettings: (settings) => {
       ipcRenderer.send('save-settings', settings);
     },
 
+    /**
+     * Sends a message to the main process to get settings.
+     * @returns {Promise<object>} A promise that resolves to an object containing the current settings.
+     */
     getSettings: async () => {
       return ipcRenderer.invoke('get-settings');
+    },
+
+    /**
+     * Sends a message to the main process to get paused downloads.
+     * @returns {Promise<Array>} A promise that resolves to an array of paused downloads.
+     */
+    getPausedDownloads: async () => {
+      return ipcRenderer.invoke('get-paused-downloads');
     },
 
     /**
@@ -28,11 +45,19 @@ contextBridge.exposeInMainWorld(
       ipcRenderer.send('start-download', url, id);
     },
 
+    /**
+     * Sends a message to the main process to pause a download.
+     * @param {number} id - The unique identifier for the download.
+     */
     pauseDownload: (id) => {
       console.log(`pauseDownload called with id: ${id}`);
       ipcRenderer.send('pause-download', id);
     },
 
+    /**
+     * Sends a message to the main process to resume a download.
+     * @param {number} id - The unique identifier for the download.
+     */
     resumeDownload: (id) => {
       console.log(`resumeDownload called with id: ${id}`);
       ipcRenderer.send('resume-download', id);

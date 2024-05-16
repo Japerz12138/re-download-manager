@@ -37,7 +37,23 @@ try {
 
 app.on('ready', () => app.setAppUserModelId(app.name));
 
-//i need to remember to make this window less stupid - ethan
+showNotification = ($title, $body) => {
+  new Notification({
+    title: $title,
+    body: $body
+  }).show()
+}
+
+
+/**
+ * A custom Transform stream that tracks the progress of an asynchronous download.
+ *
+ * @class ProgressStream
+ * @extends stream.Transform
+ * @param {Function} onProgress - The callback function to be called when progress is updated.
+ * @param {number} partSize - The size of each part of the download.
+ * @param {string} id - The identifier for the download.
+ */
 class ProgressStream extends stream.Transform {
   constructor(onProgress, partSize, id) {
     super();
@@ -70,8 +86,6 @@ class ProgressStream extends stream.Transform {
     callback();
   }
 }
-
-
 // For Ethan's reference, here is the modified ProgressStream class with the speed limit functionality:
 //   _transform(chunk, encoding, callback) {
 //     this.totalBytes += chunk.length;
@@ -190,11 +204,14 @@ async function downloadFile(url, onProgress, id, resume = false) {
       }, currentPartSize, id);
 
       const writeStream = fs.createWriteStream(tempFilePath);
+      writeStream.on('error', (error) => {
+        console.error(`Failed to write to ${tempFilePath}: ${error}`);
+      });
       downloads[id].streams.push(writeStream);
       downloads[id].tempFilePaths.push(tempFilePath);
 
       await pipeline(response.data.pipe(progressStream), writeStream).catch((error) => {
-        if (downloads[id].isCancelled) {
+        if (downloads[id] && downloads[id].isCancelled) {
           console.log(`Download ${id} cancelled during shard ${i} download`);
           throw new Error('Download cancelled');
         } else {
@@ -251,7 +268,7 @@ async function downloadFile(url, onProgress, id, resume = false) {
 
       const tempDirectoryPath = path.join(__dirname, 'temp', id.toString());
       try {
-        await fs.promises.rem(tempDirectoryPath, { recursive: true });
+        await fs.promises.rm(tempDirectoryPath, { recursive: true });
       } catch (err) {
         console.error(`Failed to delete directory ${tempDirectoryPath}: ${err}`);
       }
@@ -273,13 +290,6 @@ async function downloadFile(url, onProgress, id, resume = false) {
   }
 }
 
-showNotification = ($title, $body) => {
-  new Notification({
-    title: $title,
-    body: $body
-  }).show()
-}
-
 /**
  * Pauses a download by cancelling ongoing streams, saving the download state, and marking it as paused.
  * @param {number} id - The ID of the download to pause.
@@ -291,13 +301,21 @@ async function pauseDownload(id) {
     downloads[id].isPaused = true;
     for (const stream of downloads[id].streams) {
       if (stream.writable && !stream.writableEnded) {
-        console.log(`Ending stream for download ${id}`);
-        stream.end();
+        try {
+          console.log(`Ending stream for download ${id}`);
+          stream.end();
+        } catch (error) {
+
+        }
       }
     }
     const response = await axios.head(downloads[id].url);
     const fileSize = parseInt(response.headers['content-length'], 10);
+    const fileName = path.basename(downloads[id].url); // derive fileName from url
     const downloadState = {
+      id: id,
+      fileName: fileName,
+      downloadFolderPath: config?.directoryPath || path.join(os.homedir(), 'Downloads'),
       url: downloads[id].url,
       totalBytes: downloads[id].totalDownloadedBytes.reduce((a, b) => a + b, 0),
       fileSize: fileSize,
@@ -308,7 +326,6 @@ async function pauseDownload(id) {
     };
     const stateFilePath = path.join(__dirname, 'temp', id.toString(), `${id}-state.json`);
     await fs.promises.writeFile(stateFilePath, JSON.stringify(downloadState));
-    console.log(`Download ${id} paused`);
     downloads[id].cancelSource.cancel();
   }
 }
@@ -445,30 +462,33 @@ async function resumeDownload(id, onProgress) {
   }
 }
 
+/**
+ * Cancels a download by the given ID.
+ * @param {string} id - The ID of the download to cancel.
+ * @returns {Promise<void>} - A promise that resolves once the download is cancelled.
+ */
 async function cancelDownload(id) {
   if (downloads[id]) {
-    console.log(`Cancelling download ${id}`);
     downloads[id].isCancelled = true;
+    console.log(`Cancelling download ${id}`);
     for (const stream of downloads[id].streams) {
       if (stream.writableEnded === false) {
-        console.log(`Ending stream for download ${id}`);
         stream.end();
       }
     }
-    for (const tempFilePath of downloads[id].tempFilePaths) {
-      console.log(`Deleting temporary file ${tempFilePath} for download ${id}`);
-      if (tempFilePath.includes(id)) {
-        await fs.promises.unlink(tempFilePath).catch(() => { });
-      }
+    try {
+      downloads[id].cancelSource.cancel();
+    } catch (err) {
+
     }
-    const stateFilePath = path.join(__dirname, 'temp', `${id}-state.json`);
-    if (fs.existsSync(stateFilePath)) {
-      await fs.promises.unlink(stateFilePath).catch(() => { });
-    }
-    console.log(`Cancelling axios request for download ${id}`);
-    downloads[id].cancelSource.cancel();
-    console.log(`Deleting download ${id} from downloads object`);
     delete downloads[id];
+
+    const tempDirectoryPath = path.join(__dirname, 'temp', id.toString());
+    try {
+      await fs.promises.rm(tempDirectoryPath, { recursive: true });
+    } catch (err) {
+
+    }
   }
 }
 

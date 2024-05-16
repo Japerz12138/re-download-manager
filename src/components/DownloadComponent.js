@@ -1,35 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DownloadProgress from './DownloadProgress';
-/**
- * Represents a component for downloading files.
- *
- * @param {Object} props - The component props.
- * @param {string} props.url - The URL of the file to download.
- * @param {Function} props.removeUrl - The function to remove the URL from the download list.
- * @returns {JSX.Element} The DownloadComponent JSX element.
- */
-function DownloadComponent({ url, removeUrl }) {
-  const [downloadInfo, setDownloadInfo] = useState({
-    shardProgress: [0, 0, 0, 0],
-    fileName: 'Requesting download...',
-    fileSize: 0,
-    speed: 0,
-    eta: 0,
-  });
 
-  const [isCancelled, setIsCancelled] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isResumed, setIsResumed] = useState(false);
-  const currentDownload = useRef({ url: null, id: null });
-  const handleDownloadProgress = useRef(null);
-  const downloadId = useRef(0);
-
+const useStartDownload = (url, isResumed, initialState, isPaused, currentDownload, setDownloadInfo, handleDownloadProgress) => {
   useEffect(() => {
-    console.log('useEffect triggered for starting a new download');
-    if (currentDownload.current.id !== null) {
-      window.electron.offDownloadProgress(currentDownload.current.id);
+    let id;
+    if (currentDownload.current.id === null && !isResumed) {
+      id = initialState ? initialState.id : Date.now();
+      console.log(`Generated id: ${id}`);
+      currentDownload.current = { url, id };
+    } else {
+      id = currentDownload.current.id;
     }
-    const id = isResumed ? currentDownload.current.id : Date.now();
     console.log(`Generated id: ${id}`);
     currentDownload.current = { url, id };
     let isMounted = true;
@@ -46,7 +27,7 @@ function DownloadComponent({ url, removeUrl }) {
       }));
     };
     window.electron.onDownloadProgress(id, handleDownloadProgress.current);
-    if (!isResumed) { 
+    if (!isResumed && !(initialState && isPaused) && !isPaused) {
       window.electron.startDownload(url, id, isPaused);
       console.log(`Starting download with id: ${id}`);
     }
@@ -54,25 +35,60 @@ function DownloadComponent({ url, removeUrl }) {
       isMounted = false;
       window.electron.offDownloadProgress(id);
     };
-  }, [url, isResumed]);
+  }, [url, isResumed, initialState, isPaused]);
+};
 
-
+const useHandleActions = (isPaused, currentDownload) => {
   useEffect(() => {
     console.log('useEffect triggered for handling pause and cancel actions');
-    if (isCancelled) {
-      window.electron.cancelDownload(currentDownload.current.id);
-    }
     if (isPaused) {
       window.electron.pauseDownload(currentDownload.current.id);
     }
-  }, [isCancelled, isPaused]);
+  }, [isPaused]);
+};
+
+/**
+ * Represents a component for downloading files.
+ *
+ * @param {Object} props - The component props.
+ * @param {string} props.url - The URL of the file to download.
+ * @param {function} props.removeUrl - The function to remove the URL from the download list.
+ * @param {Object} props.initialState - The initial state of the download, if one exists.
+ * @returns {JSX.Element} The DownloadComponent JSX element.
+ */
+function DownloadComponent({ url, removeUrl, initialState }) {
+  const [downloadInfo, setDownloadInfo] = useState({
+    shardProgress: initialState
+      ? initialState.totalBytesDownloaded.map(bytes => ((bytes / initialState.fileSize) * 100) * 4)
+      : [0, 0, 0, 0],
+
+    fileName: initialState ? initialState.fileName : 'Requesting download...',
+    fileSize: initialState ? initialState.fileSize : 0,
+    speed: 0,
+    eta: 0,
+    downloadFolderPath: initialState ? initialState.downloadFolderPath : '',
+  });
+
+  const [isCancelled, setIsCancelled] = useState(initialState ? initialState.isCancelled : false);
+  const [isPaused, setIsPaused] = useState(initialState ? true : false);
+  const [isResumed, setIsResumed] = useState(false);
+  const currentDownload = useRef({ url: initialState ? initialState.url : null, id: initialState ? initialState.id : null });
+  const handleDownloadProgress = useRef(null);
+
+  //custom hook for this since this handles persistant states, apparently this is good practice
+  useStartDownload(url, isResumed, initialState, isPaused, currentDownload, setDownloadInfo, handleDownloadProgress);
+  useHandleActions(isCancelled, isPaused, currentDownload);
 
   const cancelDownload = () => {
-    setIsCancelled(true);
-    console.log(`Request to cancel download with id: ${currentDownload.current.id}`);
-    window.electron.cancelDownload(currentDownload.current.id);
-    console.log('Download cancelled');
-    removeUrl(url);
+    if (currentDownload.current.id !== null) {
+      setIsCancelled(true);
+      console.log(`Request to cancel download with id: ${currentDownload.current.id}`);
+      window.electron.cancelDownload(currentDownload.current.id);
+      console.log('Download cancelled');
+      removeUrl(url);
+    } else {
+      console.error('No download to cancel');
+    }
   };
 
   const pauseDownload = () => {
@@ -84,12 +100,14 @@ function DownloadComponent({ url, removeUrl }) {
   };
 
   const resumeDownload = () => {
-    setIsResumed(true);
-    setIsPaused(false);
-    console.log(`isResumed set to: ${isResumed}`);
-    console.log(`Request to resume download with id: ${currentDownload.current.id}`);
-    window.electron.resumeDownload(currentDownload.current.id, handleDownloadProgress.current);
-    console.log('Download resumed');
+    if (!isResumed) {
+      setIsResumed(true);
+      setIsPaused(false);
+      console.log(`isResumed set to: ${isResumed}`);
+      console.log(`Request to resume download with id: ${currentDownload.current.id}`);
+      window.electron.resumeDownload(currentDownload.current.id, handleDownloadProgress.current);
+      console.log('Download resumed');
+    }
   };
 
   const totalProgress = downloadInfo.shardProgress.reduce((a, b) => a + b, 0) / 4;

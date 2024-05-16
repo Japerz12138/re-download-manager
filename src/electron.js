@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const { downloadFile, setDownloadPath, cancelDownload, pauseDownload, resumeDownload } = require('./downloadManager');
+const loadPausedDownloads = require('./startup');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -67,7 +68,7 @@ app.on('activate', () => {
 app.on('ready', () => {
   fs.readFile(filePath, 'utf8', (err, data) => {
     if (err || data.length === 0) {
-      ipcMain.emit('save-settings', null, { 
+      ipcMain.emit('save-settings', null, {
         directoryPath: path.join(os.homedir(), 'Downloads'),
         theme: 'Follow System',
         threadNumber: '4',
@@ -105,24 +106,50 @@ ipcMain.on('start-download', (event, url, id, resume) => {
   });
 });
 
+/**
+ * Listens for the 'cancel-download' event and cancels the file download.
+ * @param {object} event - The event object.
+ * @param {string} id - The ID of the download to be cancelled.
+ */
 ipcMain.on('cancel-download', (event, id) => {
   cancelDownload(id);
 });
 
+/**
+ * Listens for the 'pause-download' event and pauses the file download.
+ * @param {object} event - The event object.
+ * @param {string} id - The ID of the download to be paused.
+ */
 ipcMain.on('pause-download', (event, id) => {
   pauseDownload(id);
 });
 
+/**
+ * Listens for the 'resume-download' event and resumes the paused file download.
+ * @param {object} event - The event object.
+ * @param {string} id - The ID of the download to be resumed.
+ */
 ipcMain.on('resume-download', (event, id) => {
   resumeDownload(id, (downloadInfo) => {
     event.sender.send('download-progress', { ...downloadInfo, id });
   });
 });
 
+/**
+ * Listens for the 'save-settings' event and saves the new settings.
+ * @param {object} event - The event object.
+ * @param {object} newSettings - The new settings to be saved.
+
+ * Default settings for the download manager.
+ * @typedef {Object} DefaultSettings
+ * @property {string} directoryPath - The default directory path for downloads.
+ * @property {string} theme - The default theme for the download manager.
+ * @property {string} threadNumber - The default number of threads for downloading.
+ */
 
 ipcMain.on('save-settings', (event, newSettings) => {
   const filePath = path.join(app.getPath('userData'), 'settings.json');
-  const defaultSettings = { 
+  const defaultSettings = {
     directoryPath: path.join(os.homedir(), 'Downloads'),
     theme: 'Follow System',
     threadNumber: '4',
@@ -153,11 +180,22 @@ ipcMain.on('save-settings', (event, newSettings) => {
   });
 });
 
+/**
+ * Handles the 'get-paused-downloads' event and returns the paused downloads.
+ * @returns {Promise<Array>} A promise that resolves to an array of paused downloads.
+ */
+ipcMain.handle('get-paused-downloads', async () => {
+  return loadPausedDownloads();
+});
+
+/**
+ * Handles the 'get-settings' event and returns the current settings.
+ * @returns {Promise<object>} A promise that resolves to an object containing the current settings.
+ */
 ipcMain.handle('get-settings', async () => {
   const filePath = path.join(app.getPath('userData'), 'settings.json');
-
   if (!fs.existsSync(filePath)) {
-    return { 
+    return {
       directoryPath: path.join(os.homedir(), 'Downloads'),
       theme: 'Follow System',
       threadNumber: '4',
