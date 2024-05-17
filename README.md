@@ -1,3 +1,5 @@
+![RDM](./src/assets/images/RDM.png)
+
 # Getting Started with RDM
 
 This project is for NYIT Senior Project I. RDM is a download manager that can download internet content such as files, BTs, or other URL requests.

@@ -124,7 +124,7 @@ function History() {
                         </div>
                     </div>
                 </div>
-                <div className="d-flex justify-content-between" style={{ marginTop: '10px' }}>
+                <div className="d-flex justify-content-between" style={{ marginTop: '10px', marginBottom: '10px' }}>
                     <Button className="btn btn-danger" type="button" onClick={handleShow}><i class="bi bi-trash"></i>  Clear</Button>
                     <Modal show={show} onHide={handleClose}>
                         <Modal.Header closeButton>
@@ -140,8 +140,8 @@ function History() {
                             </Button>
                         </Modal.Footer>
                     </Modal>
-                    <div>
-                        <Button className="btn btn-primary mr-2" type="button" disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} style={{ marginRight: '10px' }}><i class="bi bi-chevron-left"></i>  Previous</Button>
+                    <div style={{marginBottom: '10px'}}>
+                        <Button className="btn btn-primary mr-2" type="button" disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} style={{ marginRight: '10px'}}><i class="bi bi-chevron-left"></i>  Previous</Button>
                         <Button className="btn btn-primary" type="button" disabled={currentPage === totalPages} onClick={() => setCurrentPage(currentPage + 1)}>Next  <i class="bi bi-chevron-right"></i></Button>
                     </div>
                 </div>

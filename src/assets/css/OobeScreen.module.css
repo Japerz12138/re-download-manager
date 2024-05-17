@@ -1,0 +1,36 @@
+.oobe-screen {
+    overflow: hidden;
+}
+
+.oobe-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #343a40;
+    color: white;
+}
+
+.oobe-button {
+    width: 70px;
+    height: 70px;
+}
+
+.welcome-text {
+    font-size: 1.5rem;
+}
+
+.rdm-title {
+    font-size: 2rem;
+}
+
+.team-signature {
+    font-size: 0.8rem;
+    margin-bottom: 0.2rem;
+}
+
+.team-name {
+    font-weight: bold;
+    margin-top: 0.2rem;
+}

@@ -141,6 +141,12 @@ function Settings() {
         setTimeout(() => setShowSavedToast(false), 2000);
     };
 
+    //For debug the oobe screen
+    const handleTriggerOobe = () => {
+        localStorage.removeItem('oobeShown');
+        window.location.reload();
+    };
+
     return (
         <div className="Settings transAnimation">
             <Toast show={showSavedToast} onClose={() => setShowSavedToast(false)} style={{ position: 'fixed', top: '0', right: '0', margin: '1rem', zIndex: '10000' }}>
@@ -299,6 +305,8 @@ function Settings() {
                                                 </Button>
                                             </Modal.Footer>
                                         </Modal>
+                                        {/* For OOBE Debug */}
+                                        {/* <Button onClick={handleTriggerOobe} style={{ marginLeft: '10px' }}>Trigger OOBE</Button> */}
                                     </div>
                                 </div>
                             </div>

@@ -7,10 +7,12 @@ import Settings from './pages/settings';
 import { settingsChangedEvent } from './pages/settings';
 import History from './pages/history';
 import { Button, Modal, Toast, FloatingLabel } from 'react-bootstrap';
+import OobeScreen from './pages/oobe';
 
 const HomePageContext = createContext();
 
 function HomePageProvider({ children }) {
+  const [showOobe, setShowOobe] = useState(false);
   const [urls, setUrls] = useState([]);
   const [pausedDownloads, setPausedDownloads] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -19,13 +21,26 @@ function HomePageProvider({ children }) {
   const urlInputRef = useRef(null);
   const [theme, setTheme] = useState(null);
 
+
+  useEffect(() => {
+    const oobeShown = localStorage.getItem('oobeShown');
+    if (!oobeShown) {
+      setShowOobe(true);
+    }
+  }, []);
+
+  const handleOobeCompleted = () => {
+    localStorage.setItem('oobeShown', 'true');
+    setShowOobe(false);
+  };
+
   return (
     <HomePageContext.Provider value={{
       urls, setUrls, showModal, setShowModal, newUrl, setNewUrl,
       showClipboardToast, setShowClipboardToast, urlInputRef, theme, setTheme,
       pausedDownloads, setPausedDownloads
     }}>
-      {children}
+      {showOobe ? <OobeScreen onCompleted={handleOobeCompleted} /> : (children)}
     </HomePageContext.Provider>
   );
 }
