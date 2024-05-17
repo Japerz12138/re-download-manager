@@ -62,6 +62,10 @@ contextBridge.exposeInMainWorld(
       return ipcRenderer.invoke('get-paused-downloads');
     },
 
+    getDownloadPath: async () => {
+      return ipcRenderer.invoke('get-download-path');
+    },
+
     /**
      * Sends a message to the main process to start a download.
      * @param {string} url - The URL of the file to download.

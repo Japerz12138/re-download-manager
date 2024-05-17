@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { EventEmitter } from 'events';
-import { Form, Dropdown, Toast } from 'react-bootstrap';
+import { Form, Dropdown, Toast, Button, Modal } from 'react-bootstrap';
 const { version } = require('../../package.json');
+
 
 export const settingsChangedEvent = new EventEmitter();
 
@@ -13,8 +14,13 @@ function Settings() {
     const [selectedThreadNumber, setSelectedThreadNumber] = useState('');
     const [selectedSpeedLimit, setSelectedSpeedLimit] = useState(0);
     const [selectedColor, setSelectedColor] = useState('#007bff');
-    const fileInputRef = useRef(null);
     const [developerInfo, setDeveloperInfo] = useState('');
+    const fileInputRef = useRef(null);
+    const [downloadPath, setDownloadPath] = useState('');
+    const [show, setShow] = useState(false);
+
+    const handleShow = () => setShow(true);
+    const handleClose = () => setShow(false);
 
     useEffect(() => {
         window.electron.getSettings().then((settings) => {
@@ -24,6 +30,14 @@ function Settings() {
             setSelectedSpeedLimit(settings.speedLimit);
             setSelectedColor(settings.color);
         });
+
+        window.electron.getDownloadPath()
+            .then((path) => {
+                setDownloadPath(path);
+            })
+            .catch((error) => {
+                console.error("Error getting download path: ", error);
+            });
     }, []);
 
     useEffect(() => {
@@ -91,8 +105,44 @@ function Settings() {
         document.documentElement.style.setProperty('--main-color', event.target.value);
     };
 
+    const resetToDefault = () => {
+        const defaultSettings = {
+            directoryPath: downloadPath, // default directory path
+            theme: 'Follow System', // default theme
+            threadNumber: '4', // default thread number
+            speedLimit: 0, // default speed limit
+            color: '#007bff' // default color
+        };
+
+        setSelectedDirectoryPath(defaultSettings.directoryPath);
+        window.electron.saveSettings({ directoryPath: defaultSettings.directoryPath });
+        settingsChangedEvent.emit('settingsChanged', { setting: 'directoryPath', value: defaultSettings.directoryPath });
+
+        setSelectedTheme(defaultSettings.theme);
+        window.electron.saveSettings({ directoryPath: defaultSettings.theme });
+        settingsChangedEvent.emit('settingsChanged', { setting: 'theme', value: defaultSettings.theme });
+
+        setSelectedThreadNumber(defaultSettings.threadNumber);
+        window.electron.saveSettings({ directoryPath: defaultSettings.threadNumber });
+        settingsChangedEvent.emit('settingsChanged', { setting: 'threadNumber', value: defaultSettings.threadNumber });
+
+        setSelectedSpeedLimit(defaultSettings.speedLimit);
+        window.electron.saveSettings({ directoryPath: defaultSettings.speedLimit });
+        settingsChangedEvent.emit('settingsChanged', { setting: 'speedLimit', value: defaultSettings.speedLimit });
+
+        setSelectedColor(defaultSettings.color);
+        document.documentElement.style.setProperty('--main-color', defaultSettings.color);
+        window.electron.saveSettings({ directoryPath: defaultSettings.color });
+
+        handleClose();
+
+        window.electron.saveSettings(defaultSettings);
+        setShowSavedToast(true);
+        setTimeout(() => setShowSavedToast(false), 2000);
+    };
+
     return (
-        <div className="Settings">
+        <div className="Settings transAnimation">
             <Toast show={showSavedToast} onClose={() => setShowSavedToast(false)} style={{ position: 'fixed', top: '0', right: '0', margin: '1rem', zIndex: '10000' }}>
                 <Toast.Body className="text-center"><i class="bi bi-floppy"></i>  Setting has been saved</Toast.Body>
             </Toast>
@@ -226,6 +276,31 @@ function Settings() {
                                         <a href="https://github.com/Japerz12138/re-download-manager" target="_blank" rel="noopener noreferrer">
                                             <img src="https://img.shields.io/github/stars/Japerz12138/re-download-manager?style=social" alt="Github Badge" />
                                         </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="card-body text-start shadow" style={{ borderRadius: '12px', borderTopLeftRadius: '-1px', opacity: '1', borderColor: 'rgb(0,128,255)', marginBottom: '18px' }}>
+                                <div className="row">
+                                    <div className="col-xl-7">
+                                        <h4><i class="bi bi-arrow-clockwise"></i> Reset to Default Settings</h4>
+                                        <h6 className="text-muted mb-2" style={{ marginBottom: '-11px', marginTop: '-4px' }}>Reset RDM's settings</h6>
+                                    </div>
+                                    <div className="col-xl-5" style={{ textAlign: 'right', marginTop: '10px' }}>
+                                        <Button onClick={handleShow}><i class="bi bi-arrow-clockwise"></i>  Reset to Default</Button>
+                                        <Modal show={show} onHide={handleClose}>
+                                            <Modal.Header closeButton>
+                                                <Modal.Title><i class="bi bi-exclamation-diamond"></i> Reset Settings</Modal.Title>
+                                            </Modal.Header>
+                                            <Modal.Body>Are you sure you want to reset the settings?</Modal.Body>
+                                            <Modal.Footer>
+                                                <Button variant="secondary" onClick={handleClose}>
+                                                    Cancel
+                                                </Button>
+                                                <Button variant="primary" onClick={resetToDefault}>
+                                                    <i class="bi bi-arrow-clockwise"></i>  Yes, Reset
+                                                </Button>
+                                            </Modal.Footer>
+                                        </Modal>
                                     </div>
                                 </div>
                             </div>

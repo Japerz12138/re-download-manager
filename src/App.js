@@ -170,7 +170,7 @@ function HomePage() {
     setUrls(prevUrls => prevUrls.filter(u => u !== url));
     setPausedDownloads(prevDownloads => prevDownloads.filter(download => download.url !== url));
   };
-  
+
   if (theme === null) {
     return <div>Loading...</div>;
   }
@@ -184,7 +184,7 @@ function HomePage() {
   }
 
   return (
-    <div className="App">
+    <div className="App transAnimation">
       <div style={{ display: isVisible ? 'block' : 'none' }}>
         <Toast show={showClipboardToast} onClose={() => setShowClipboardToast(false)} style={{ position: 'fixed', top: '0', right: '0', margin: '1rem', zIndex: '10000' }}>
           <Toast.Body><i className="bi bi-clipboard-check"></i>  URL detected in clipboard!</Toast.Body>
@@ -222,7 +222,15 @@ function HomePage() {
             <Modal.Title><i className="bi bi-link-45deg"></i>  Enter Download URL</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <input ref={urlInputRef} type="text" value={newUrl} onChange={handleUrlChange} className="form-control" placeholder="Enter URL" />
+            <input
+              ref={urlInputRef}
+              type="text"
+              value={newUrl}
+              onChange={handleUrlChange}
+              onKeyDown={event => event.key === 'Enter' && handleDownload()}
+              className="form-control"
+              placeholder="Enter URL"
+            />
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={handleCloseModal}>
@@ -244,12 +252,14 @@ function App() {
     <Router>
       <HomePageProvider>
         <Navbar />
-        <Routes>
-          <Route path="/" element={<HomePage />}>
-            <Route path="history" element={<History />} />
-            <Route path="settings" element={<Settings />} />
-          </Route>
-        </Routes>
+        <div className="transAnimation">
+          <Routes>
+            <Route path="/" element={<HomePage />}>
+              <Route path="history" element={<History />} />
+              <Route path="settings" element={<Settings />} />
+            </Route>
+          </Routes>
+        </div>
       </HomePageProvider>
     </Router>
   );
