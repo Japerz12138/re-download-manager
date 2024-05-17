@@ -6,9 +6,13 @@ const { promisify } = require('util');
 const stream = require('stream');
 const pipeline = promisify(stream.pipeline);
 const { Notification, app } = require('electron');
+
 let config;
+let downloads = {};
+
 const defaultPath = path.join(os.homedir(), 'Downloads');
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+const historyPath = path.join(app.getPath('userData'), 'history.json');
 
 try {
   config = require(settingsPath);
@@ -116,7 +120,6 @@ class ProgressStream extends stream.Transform {
 //   }
 // }
 
-let downloads = {};
 
 /**
  * Downloads a file from the specified URL.
@@ -265,6 +268,8 @@ async function downloadFile(url, onProgress, id, resume = false) {
         showNotification('Donwload Complete', fileName + ' has been downloaded.');
         resolve();
       }));
+
+      await logDownload(id, url, fileSize, numShards, downloadFilePath, fileName);
 
       const tempDirectoryPath = path.join(__dirname, 'temp', id.toString());
       try {
@@ -454,6 +459,8 @@ async function resumeDownload(id, onProgress) {
     resolve();
   }));
 
+  await logDownload(id, url, fileSize, numShards, downloadFilePath, fileName);
+
   const tempDirectoryPath = path.join(__dirname, 'temp', id.toString());
   try {
     await fs.promises.rm(tempDirectoryPath, { recursive: true });
@@ -490,6 +497,42 @@ async function cancelDownload(id) {
 
     }
   }
+}
+
+/**
+ * Logs a download to the history file.
+ *
+ * @param {string} id - The ID of the download.
+ * @param {string} url - The URL of the downloaded file.
+ * @param {number} fileSize - The size of the downloaded file in bytes.
+ * @param {number} numShards - The number of shards used for the download.
+ * @param {string} finalFilePath - The final file path of the downloaded file.
+ * @param {string} fileName - The name of the downloaded file.
+ * @returns {Promise<void>} - A promise that resolves when the download is logged.
+ */
+async function logDownload(id, url, fileSize, numShards, finalFilePath, fileName) {
+  let history;
+
+  try {
+    history = require(historyPath);
+  } catch (error) {
+    console.error('Could not load history file', error);
+    history = [];
+  }
+
+  const downloadLog = {
+    id,
+    url,
+    fileName,
+    fileSize,
+    dateTime: new Date().toISOString(),
+    numShards,
+    finalFilePath
+  };
+
+  history.push(downloadLog);
+
+  fs.writeFileSync(historyPath, JSON.stringify(history, null, 2), 'utf8');
 }
 
 module.exports = { downloadFile, cancelDownload, pauseDownload, resumeDownload };

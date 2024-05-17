@@ -7,9 +7,21 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 const listeners = new Map();
 
+/**
+ * Exposes Electron APIs to the renderer process using contextBridge.
+ * @namespace electron
+ */
 contextBridge.exposeInMainWorld(
   'electron',
   {
+
+    /**
+     * Opens the specified path in the default file manager.
+     * @param {string} path - The path to open.
+     */
+    openPath: (path) => {
+      return ipcRenderer.send('open-path', path);
+    },
 
     /**
      * Sends a message to the main process to save settings.
@@ -25,6 +37,21 @@ contextBridge.exposeInMainWorld(
      */
     getSettings: async () => {
       return ipcRenderer.invoke('get-settings');
+    },
+
+    /**
+     * Sends a message to the main process to get history.
+     * @returns {Promise<Array>} A promise that resolves to an array of download history.
+     */
+    getHistory: async () => {
+      return ipcRenderer.invoke('get-history');
+    },
+
+    /**
+     * Sends a message to the main process to clear the history file.
+     */
+    clearHistory: async () => {
+      return ipcRenderer.invoke('clear-history');
     },
 
     /**

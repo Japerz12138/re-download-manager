@@ -55,6 +55,13 @@
   filter: brightness(80%);
 }
 
+.btn-primary:disabled, 
+.btn-primary.disabled {
+  background-color: var(--main-color);
+  border-color: var(--main-color);
+  opacity: 0.65;
+}
+
 .fab-btn {
   background-color: var(--main-color);
 }
