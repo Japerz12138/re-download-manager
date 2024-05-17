@@ -3,7 +3,7 @@
  * @module preload
  */
 
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, shell } = require('electron');
 
 const listeners = new Map();
 
@@ -14,6 +14,14 @@ const listeners = new Map();
 contextBridge.exposeInMainWorld(
   'electron',
   {
+
+    /**
+     * Opens the specified path in the default file manager.
+     * @param {string} path - The path to open.
+     */
+    openPath: (path) => {
+      return ipcRenderer.send('open-path', path);
+    },
 
     /**
      * Sends a message to the main process to save settings.
