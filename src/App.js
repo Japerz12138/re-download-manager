@@ -53,20 +53,19 @@ function HomePage() {
   const location = useLocation();
   const isVisible = location.pathname === '/';
 
-
-  const checkClipboard = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (isValidURL(text)) {
-        setNewUrl(text);
-        setShowModal(true);
-        setShowClipboardToast(true);
-        setTimeout(() => setShowClipboardToast(false), 3000);
-      }
-    } catch (error) {
-      console.error('Error reading clipboard:', error);
-    }
-  };
+  // const checkClipboard = async () => {
+  //   try {
+  //     const text = await navigator.clipboard.readText();
+  //     if (isValidURL(text)) {
+  //       setNewUrl(text);
+  //       setShowModal(true);
+  //       setShowClipboardToast(true);
+  //       setTimeout(() => setShowClipboardToast(false), 3000);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error reading clipboard:', error);
+  //   }
+  // };
 
   const isValidURL = (url) => {
     try {
@@ -101,8 +100,6 @@ function HomePage() {
     };
     fetchTheme();
 
-    checkClipboard();
-
     window.addEventListener('focus', handleWindowFocus);
 
     const handleSettingsChange = ({ setting, value }) => {
@@ -132,7 +129,7 @@ function HomePage() {
   }, [theme]);
 
   const handleWindowFocus = () => {
-    checkClipboard();
+    //checkClipboard();
   };
 
   const handleKeyDown = (event) => {
@@ -145,8 +142,20 @@ function HomePage() {
     }
   };
 
-  const handleOpenModal = () => {
-    setShowModal(true);
+  const handleOpenModal = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (isValidURL(text)) {
+        setNewUrl(text);
+        setShowModal(true);
+        setShowClipboardToast(true);
+        setTimeout(() => setShowClipboardToast(false), 3000);
+      } else {
+        setShowModal(true);
+      }
+    } catch (error) {
+      console.error('Error reading clipboard:', error);
+    }
   };
 
   const handleCloseModal = () => {
