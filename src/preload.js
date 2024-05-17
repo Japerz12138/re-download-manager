@@ -3,7 +3,7 @@
  * @module preload
  */
 
-const { contextBridge, ipcRenderer, shell } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 
 const listeners = new Map();
 
