@@ -16,6 +16,14 @@ contextBridge.exposeInMainWorld(
   {
 
     /**
+     * Opens the specified path in the default file manager.
+     * @param {string} path - The path to open.
+     */
+    openPath: (path) => {
+      return ipcRenderer.send('open-path', path);
+    },
+
+    /**
      * Sends a message to the main process to save settings.
      * @param {object} settings - The settings to be saved.
      */

@@ -1,15 +1,7 @@
-/**
- * Renders a component to display download progress.
- *
- * @param {Object} props - The component props.
- * @param {number} props.progress - The progress of the download in percentage.
- * @param {string} props.fileName - The name of the file being downloaded.
- * @param {string} props.fileSize - The size of the file being downloaded.
- * @param {number} props.speed - The download speed in MB/s.
- * @param {string} props.eta - The estimated time of arrival for the download to complete.
- * @returns {JSX.Element} The rendered DownloadProgress component.
- */
 import React, { useState, useEffect } from 'react';
+
+//universal path for now
+let downloadPath = '';
 
 function getFileIcon(fileName) {
   const lastDotIndex = fileName.lastIndexOf('.');
@@ -57,7 +49,27 @@ function formatETA(etaInSeconds) {
   }
 }
 
+/**
+ * Renders a component to display download progress.
+ *
+ * @param {Object} props - The component props.
+ * @param {number} props.progress - The progress of the download in percentage.
+ * @param {string} props.fileName - The name of the file being downloaded.
+ * @param {string} props.fileSize - The size of the file being downloaded.
+ * @param {number} props.speed - The download speed in MB/s.
+ * @param {string} props.eta - The estimated time of arrival for the download to complete.
+ * @returns {JSX.Element} The rendered DownloadProgress component.
+ */
 function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, speed, eta, cancelDownload, pauseDownload, isPaused, resumeDownload, isResumed }) {
+
+  const [selectedDirectoryPath, setSelectedDirectoryPath] = useState('');
+
+  useEffect(() => {
+    window.electron.getSettings().then((settings) => {
+      setSelectedDirectoryPath(settings.directoryPath);
+    });
+  }, []);
+
   const roundedProgress = Math.round(progress);
   const formattedFileSize = formatFileSize(parseInt(fileSize));
   const formattedETA = formatETA(parseInt(eta));
@@ -69,7 +81,7 @@ function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, sp
   const isFinished = roundedProgress === 100;
 
   const handleOpenFolder = () => {
-    console.log(downloadFolderPath);
+    window.electron.openPath(selectedDirectoryPath);
   };
 
   const [isDownloadResumed, setIsDownloadResumed] = useState(false);

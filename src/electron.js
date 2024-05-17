@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const { downloadFile, setDownloadPath, cancelDownload, pauseDownload, resumeDownload } = require('./downloadManager');
 const loadPausedDownloads = require('./startup');
 const path = require('path');
@@ -135,6 +135,15 @@ ipcMain.on('resume-download', (event, id) => {
   resumeDownload(id, (downloadInfo) => {
     event.sender.send('download-progress', { ...downloadInfo, id });
   });
+});
+
+/**
+ * Listens for the 'open-path' event and opens the directory in the file system.
+ * @param {object} event - The event object.
+ * @param {string} path - The path to the directory.
+ */
+ipcMain.on('open-path', (event, path) => {
+  shell.openPath(path);
 });
 
 /**
