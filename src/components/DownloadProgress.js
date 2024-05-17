@@ -89,8 +89,16 @@ function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, sp
   useEffect(() => {
     if (isResumed) {
       setIsDownloadResumed(true);
+      console.log('Download resumed');
     }
   }, [isResumed]);
+
+  useEffect(() => {
+    if (isPaused) {
+      setIsDownloadResumed(false);
+      console.log('Download paused');
+    }
+  }, [isPaused]);
 
   return (
     <div className="card-body text-start shadow" style={{ borderRadius: '12px', borderTopLeftRadius: '-1px', opacity: '1', borderColor: 'rgb(0,128,255)', marginBottom: '18px' }}>
