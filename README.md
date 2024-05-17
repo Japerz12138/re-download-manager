@@ -1,4 +1,6 @@
-![RDM](./src/assets/images/RDM.png)
+<div style="text-align: center;">
+  <img src="./src/assets/images/RDM.png" alt="RDM" width="200" height="200" />
+</div>
 
 # Getting Started with RDM
 
