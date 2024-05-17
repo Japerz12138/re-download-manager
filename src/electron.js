@@ -163,6 +163,8 @@ ipcMain.on('save-settings', (event, newSettings) => {
     directoryPath: path.join(os.homedir(), 'Downloads'),
     theme: 'Follow System',
     threadNumber: '4',
+    color: "#eb0f6e",
+    speedLimit: 0
   };
 
   if (!fs.existsSync(settingsPath)) {
@@ -208,6 +210,8 @@ ipcMain.handle('get-settings', async () => {
       directoryPath: path.join(os.homedir(), 'Downloads'),
       theme: 'Follow System',
       threadNumber: '4',
+      color: "#eb0f6e",
+      speedLimit: 0
     };
   }
 
