@@ -230,6 +230,17 @@ ipcMain.handle('clear-history', (event) => {
   }
 });
 
+ipcMain.handle('delete-history-entry', (event, id) => {
+  if (fs.existsSync(historyPath)) {
+    let history = JSON.parse(fs.readFileSync(historyPath, 'utf8'));
+    history = history.filter(entry => entry.id !== id);
+    fs.writeFileSync(historyPath, JSON.stringify(history, null, 2), 'utf8');
+    console.log(`History entry with id ${id} deleted successfully`);
+  } else {
+    console.log('History file does not exist');
+  }
+});
+
 /**
  * Listens for the 'clear-history' event and clears the existing history file if one exists.
  * @param {object} event - The event object.

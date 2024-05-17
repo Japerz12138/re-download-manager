@@ -57,11 +57,19 @@ const useHandleActions = (isPaused, currentDownload) => {
  * @returns {JSX.Element} The DownloadComponent JSX element.
  */
 function DownloadComponent({ url, removeUrl, initialState }) {
+  const [numShards, setNumShards] = useState(8);
+
+  useEffect(() => {
+    window.electron.getSettings().then((settings) => {
+      setNumShards(settings.threadNumber);
+    });
+  }, []);
+
   const [downloadInfo, setDownloadInfo] = useState({
     shardProgress: initialState
-      ? initialState.totalBytesDownloaded.map(bytes => ((bytes / initialState.fileSize) * 100) * 4)
-      : [0, 0, 0, 0],
-
+      ? initialState.totalBytesDownloaded.map(bytes => ((bytes / initialState.fileSize) * 100) / initialState.totalBytesDownloaded.length)
+      : Array(numShards).fill(0),
+    
     fileName: initialState ? initialState.fileName : 'Requesting download...',
     fileSize: initialState ? initialState.fileSize : 0,
     speed: 0,
@@ -110,7 +118,7 @@ function DownloadComponent({ url, removeUrl, initialState }) {
     }
   };
 
-  const totalProgress = downloadInfo.shardProgress.reduce((a, b) => a + b, 0) / 4;
+  const totalProgress = downloadInfo.shardProgress.reduce((a, b) => a + b, 0) / numShards;
 
   return (
     <DownloadProgress

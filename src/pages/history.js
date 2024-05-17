@@ -52,17 +52,28 @@ function History() {
     const handleShow = () => setShow(true);
     const handleClose = () => setShow(false);
 
-    function handleClearHistory() {
-        window.electron.clearHistory();
+    async function handleClearHistory() {
+        await window.electron.clearHistory();
+        setHistory([]);
         handleClose();
         setShowClearToast(true);
         setTimeout(() => setShowClearToast(false), 2000);
+    }
+
+    function handleOpenFolder(id) {
+        const entry = history.find(entry => entry.id === id);
+        if (entry && entry.finalFilePath) {
+            const directory = entry.finalFilePath.substring(0, entry.finalFilePath.lastIndexOf('\\'));
+            window.electron.openPath(directory);
+        } else {
+            console.error(`No history entry found with id ${id}`);
+        }
     };
 
-
-    function handleOpenFolder() { };
-
-    function handleDelete() { };
+    function handleDelete(id) {
+        window.electron.deleteHistoryEntry(id);
+        setHistory(history.filter(entry => entry.id !== id));
+    }
 
     useEffect(() => {
         async function fetchHistory() {
@@ -76,7 +87,7 @@ function History() {
     const currentItems = history.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     return (
-         <div className='History transAnimation'>
+        <div className='History transAnimation'>
             <Toast show={showClearToast} onClose={() => setShowClearToast(false)} style={{ position: 'fixed', top: '0', right: '0', margin: '1rem', zIndex: '10000' }}>
                 <Toast.Body className="text-center"><i class="bi bi-trash"></i> History Cleared</Toast.Body>
             </Toast>
@@ -95,10 +106,10 @@ function History() {
                                             <h6 className="text-muted mb-2" style={{ fontSize: '13px' }}><i className="bi bi-link-45deg"></i>  {item.url}</h6>
                                         </div>
                                         <div className="col text-end">
-                                            <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={handleOpenFolder}>
+                                            <button className="btn btn-primary shadow" type="button" style={{ marginRight: '16px', height: '42px', borderRadius: '28px', width: '42px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => handleOpenFolder(item.id)}>
                                                 <i className="bi bi-folder" style={{ fontSize: '1.3rem' }}></i>
                                             </button>
-                                            <button className="btn btn-danger shadow" type="button" style={{ borderRadius: '33px', height: '42px', width: '42px', borderColor: 'rgba(255,255,255,0)', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={handleDelete}>
+                                            <button className="btn btn-danger shadow" type="button" style={{ borderRadius: '33px', height: '42px', width: '42px', borderColor: 'rgba(255,255,255,0)', display: 'inline-flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => handleDelete(item.id)}>
                                                 <i className="bi bi-x" style={{ fontSize: '1.5rem' }}></i>
                                             </button>
                                         </div>

@@ -55,6 +55,15 @@ contextBridge.exposeInMainWorld(
     },
 
     /**
+     * Sends a message to the main process to delete a history entry.
+     * @param {string} id - The ID of the history entry to delete.
+     * @returns {Promise<void>} A promise that resolves when the history entry is deleted.
+     */
+    deleteHistoryEntry: async (id) => {
+      return ipcRenderer.invoke('delete-history-entry', id);
+    },
+
+    /**
      * Sends a message to the main process to get paused downloads.
      * @returns {Promise<Array>} A promise that resolves to an array of paused downloads.
      */
