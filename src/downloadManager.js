@@ -207,6 +207,7 @@ async function downloadFile(url, onProgress, id, resume = false) {
       }, currentPartSize, id);
 
       const writeStream = fs.createWriteStream(tempFilePath);
+      writeStream.setMaxListeners(64);
       writeStream.on('error', (error) => {
         console.error(`Failed to write to ${tempFilePath}: ${error}`);
       });
@@ -229,6 +230,7 @@ async function downloadFile(url, onProgress, id, resume = false) {
     const downloadFolderPath = config?.directoryPath || path.join(os.homedir(), 'Downloads'); // Use the directory from the config file, or default to the Downloads folder
     const downloadFilePath = path.join(downloadFolderPath, fileName);
     const downloadFileStream = fs.createWriteStream(downloadFilePath);
+    downloadFileStream.setMaxListeners(64);
     downloads[id].streams.push(downloadFileStream);
 
     for (const [i, tempFilePath] of tempFilePaths.entries()) {
@@ -419,6 +421,7 @@ async function resumeDownload(id, onProgress) {
     });
 
     const writer = fs.createWriteStream(path.join(__dirname, 'temp', id, `shard-${i}`), { flags: 'a' });
+    writer.setMaxListeners(64);
 
     response.data.pipe(progressStream).pipe(writer);
 
@@ -433,6 +436,7 @@ async function resumeDownload(id, onProgress) {
   const downloadFolderPath = config?.directoryPath || path.join(os.homedir(), 'Downloads');
   const downloadFilePath = path.join(downloadFolderPath, path.basename(url));
   const downloadFileStream = fs.createWriteStream(downloadFilePath);
+  downloadFileStream.setMaxListeners(64);
 
   for (let i = 0; i < numShards; i++) {
     const tempFilePath = path.join(__dirname, 'temp', id, `shard-${i}`);

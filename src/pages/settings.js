@@ -238,8 +238,6 @@ function Settings() {
                                                 <Dropdown.Item onClick={() => handleThreadNumberChange('4')}>4</Dropdown.Item>
                                                 <Dropdown.Item onClick={() => handleThreadNumberChange('6')}>6</Dropdown.Item>
                                                 <Dropdown.Item onClick={() => handleThreadNumberChange('8')}>8</Dropdown.Item>
-                                                <Dropdown.Item onClick={() => handleThreadNumberChange('16')}>16</Dropdown.Item>
-                                                <Dropdown.Item onClick={() => handleThreadNumberChange('32')}>32</Dropdown.Item>
                                             </Dropdown.Menu>
                                         </Dropdown>
                                     </div>
