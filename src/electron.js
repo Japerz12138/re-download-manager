@@ -212,7 +212,7 @@ ipcMain.handle('get-settings', async () => {
  * Listens for the 'create-history' event and generates a new history file if one doesnt exist.
  * @param {object} event - The event object.
  */
-ipcMain.on('clear-history', (event) => {
+ipcMain.handle('clear-history', (event) => {
   if (fs.existsSync(historyPath)) {
     fs.writeFileSync(historyPath, JSON.stringify([], null, 2), 'utf8');
     console.log('History file cleared successfully');
