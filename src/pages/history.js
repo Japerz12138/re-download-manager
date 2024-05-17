@@ -76,7 +76,7 @@ function History() {
     const currentItems = history.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     return (
-         <div className='History transAnimation'>
+        <div className='History transAnimation'>
             <Toast show={showClearToast} onClose={() => setShowClearToast(false)} style={{ position: 'fixed', top: '0', right: '0', margin: '1rem', zIndex: '10000' }}>
                 <Toast.Body className="text-center"><i class="bi bi-trash"></i> History Cleared</Toast.Body>
             </Toast>
