@@ -18,6 +18,7 @@ function Settings() {
     const fileInputRef = useRef(null);
     const [downloadPath, setDownloadPath] = useState('');
     const [show, setShow] = useState(false);
+    const ColorChangeTimeoutRef = useRef(null);
 
     const handleShow = () => setShow(true);
     const handleClose = () => setShow(false);
@@ -98,11 +99,19 @@ function Settings() {
     };
 
     const handleColorChange = (event) => {
-        setSelectedColor(event.target.value); // Update color when user selects a new color
-        window.electron.saveSettings({ color: event.target.value }); // Save new color to settings
-        setShowSavedToast(true);
-        setTimeout(() => setShowSavedToast(false), 2000);
-        document.documentElement.style.setProperty('--main-color', event.target.value);
+        const newColor = event.target.value;
+        setSelectedColor(newColor); // Update color when user selects a new color
+        document.documentElement.style.setProperty('--main-color', newColor);
+
+        if (ColorChangeTimeoutRef.current) {
+            clearTimeout(ColorChangeTimeoutRef.current);
+        }
+
+        ColorChangeTimeoutRef.current = setTimeout(() => {
+            window.electron.saveSettings({ color: newColor }); // Save new color to settings
+            setShowSavedToast(true);
+            setTimeout(() => setShowSavedToast(false), 2000);
+        }, 500); // Add an 500ms delay to avoid JSON write conflicts
     };
 
     const resetToDefault = () => {
