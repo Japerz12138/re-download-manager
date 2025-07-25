@@ -137,6 +137,10 @@ contextBridge.exposeInMainWorld(
         ipcRenderer.removeListener('download-progress', listener);
         listeners.delete(id);
       }
+    },
+
+    selectDirectory: async () => {
+      return await ipcRenderer.invoke('select-directory');
     }
   }
 );

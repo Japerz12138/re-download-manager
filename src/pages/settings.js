@@ -59,9 +59,16 @@ function Settings() {
         }
     };
 
-    const openDirectorySelector = (event) => {
+    const openDirectorySelector = async (event) => {
         event.preventDefault();
-        fileInputRef.current.click();
+        const path = await window.electron.selectDirectory();
+        if (path) {
+            setSelectedDirectoryPath(path);
+            window.electron.saveSettings({ directoryPath: path });
+            setShowSavedToast(true);
+            setTimeout(() => setShowSavedToast(false), 2000);
+            settingsChangedEvent.emit('settingsChanged', { setting: 'directoryPath', value: path });
+        }
     };
 
     const handleThemeChange = (theme) => {
@@ -179,15 +186,6 @@ function Settings() {
                                             value={selectedDirectoryPath}
                                             readOnly
                                             style={{ marginRight: '5px' }}
-                                        />
-                                        <input
-                                            ref={fileInputRef}
-                                            type="file"
-                                            className="form-control"
-                                            style={{ display: 'none' }}
-                                            directory=""
-                                            webkitdirectory=""
-                                            onChange={handleDirectoryChange}
                                         />
                                         <button
                                             className="btn btn-primary"

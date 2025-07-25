@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const url = require('url');
+const { dialog } = require('electron');
 
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
 const historyPath = path.join(app.getPath('userData'), 'history.json');
@@ -294,4 +295,14 @@ ipcMain.on('apply-theme', (event, theme) => {
 
 ipcMain.handle('get-download-path', () => {
   return path.join(os.homedir(), 'Downloads');
+});
+
+ipcMain.handle('select-directory', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openDirectory']
+  });
+  if (result.canceled || result.filePaths.length === 0) {
+    return null;
+  }
+  return result.filePaths[0];
 });
