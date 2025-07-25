@@ -11,23 +11,13 @@
   "icon": "public/favicon.ico",
   "homepage": "./",
   "dependencies": {
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
     "axios": "^1.6.8",
-    "bluebird": "^3.7.2",
     "bootstrap": "^5.3.3",
-    "electron-is-dev": "^3.0.1",
-    "electron-settings": "^4.0.4",
-    "file-saver": "^2.0.5",
-    "path-browserify": "^1.0.1",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.2",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.3",
-    "react-scripts": "5.0.1",
-    "wait-on": "^7.2.0",
-    "web-vitals": "^2.1.4"
+    "react-scripts": "5.0.1"
   },
   "scripts": {
     "react-start": "react-scripts start",
@@ -59,10 +49,15 @@
     ]
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
     "concurrently": "^8.2.2",
     "electon": "^0.0.1-security",
     "electron": "^27.3.8",
-    "electron-builder": "^24.6.4"
+    "electron-builder": "^24.6.4",
+    "electron-is-dev": "^3.0.1",
+    "wait-on": "^7.2.0"
   },
   "build": {
     "appId": "com.re-download-manager",
@@ -76,6 +71,21 @@
     ],
     "extraMetadata": {
       "main": "src/electron.js"
+    },
+    "compression": "maximum",
+    "removePackageScripts": true,
+    "removePackageKeywords": true,
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "public/favicon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     }
   }
 }
