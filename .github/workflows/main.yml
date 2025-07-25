@@ -39,10 +39,21 @@ jobs:
         run: npm install
       - name: Build React app
         run: npm run build
+      - name: Setup macOS environment
+        run: |
+          sudo chown -R $(whoami) /Users/runner/work/re-download-manager/re-download-manager
+          mkdir -p /tmp/dmg-temp
       - name: Build Electron app (Mac ARM)
-        run: npx electron-builder build --mac --arm64 --publish never
+        run: |
+          npx electron-builder build --mac --arm64 --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+      - name: List build artifacts
+        run: ls -la dist/
       - name: Upload Mac ARM Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: mac-arm-build
-          path: dist/*.dmg 
+          path: |
+            dist/*.dmg
+            dist/*.zip 
