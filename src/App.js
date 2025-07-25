@@ -101,7 +101,7 @@ function HomePage() {
       }
     };
     loadPausedDownloads();
-  }, []);
+  }, [setPausedDownloads]);
 
   useEffect(() => {
     const fetchTheme = async () => {
@@ -129,7 +129,7 @@ function HomePage() {
       window.removeEventListener('focus', handleWindowFocus);
       settingsChangedEvent.off('settingsChanged', handleSettingsChange);
     };
-  }, []);
+  }, [setTheme]);
 
 
 
@@ -145,16 +145,6 @@ function HomePage() {
 
   const handleWindowFocus = () => {
     //checkClipboard();
-  };
-
-  const handleKeyDown = (event) => {
-    if (event.key === 'Enter') {
-      const url = event.target.value.trim();
-      if (url) {
-        setUrls(prevUrls => prevUrls.includes(url) ? prevUrls : [...prevUrls, url]);
-        event.target.value = '';
-      }
-    }
   };
 
   const handleOpenModal = async () => {

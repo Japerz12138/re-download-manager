@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-//universal path for now
-let downloadPath = '';
-
 function getFileIcon(fileName) {
   const lastDotIndex = fileName.lastIndexOf('.');
   if (lastDotIndex === -1) {

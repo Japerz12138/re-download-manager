@@ -133,6 +133,16 @@ class ProgressStream extends stream.Transform {
 async function downloadFile(url, onProgress, id, resume = false) {
   const numShards = config.threadNumber || 4;
   console.log(`downloadFile called with id: ${id}`);
+  let lastProgressUpdate = 0;
+  const PROGRESS_UPDATE_INTERVAL = 500;
+  const throttledOnProgress = (progressData) => {
+    const now = Date.now();
+    // Always send 100% update immediately when download is good to go
+    if (progressData.progress === 100 || now - lastProgressUpdate > PROGRESS_UPDATE_INTERVAL) {
+      onProgress(progressData);
+      lastProgressUpdate = now;
+    }
+  };
   try {
     console.log(`Starting download ${id}`);
     console.log(`Speed Limit:  ${config.speedLimit}`);
@@ -195,7 +205,7 @@ async function downloadFile(url, onProgress, id, resume = false) {
         const totalSpeed = totalSpeeds.reduce((a, b) => a + b, 0);
         const remainingBytes = fileSize - totalDownloaded;
         const eta = remainingBytes / ((totalSpeed * 1024 * 1024) || 1);
-        onProgress({
+        throttledOnProgress({
           id,
           shardIndex: i,
           progress: percentCompleted,
@@ -265,17 +275,58 @@ async function downloadFile(url, onProgress, id, resume = false) {
       console.log(`Writing final file for download ${id}`);
       downloadFileStream.end();
 
-      await new Promise((resolve) => downloadFileStream.on('finish', () => {
-        console.log('Final file written');
-        showNotification('Donwload Complete', fileName + ' has been downloaded.');
-        resolve();
-      }));
+      // Wait for the file stream to finish
+      await new Promise((resolve, reject) => {
+        downloadFileStream.on('finish', resolve);
+        downloadFileStream.on('error', (err) => {
+          // ERR_STREAM_PREMATURE_CLOSE handler
+          if (err && err.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+            // Check if the final file exists and matches expected size
+            const downloadFolderPath = config?.directoryPath || path.join(os.homedir(), 'Downloads');
+            const downloadFilePath = path.join(downloadFolderPath, fileName);
+            try {
+              const stats = fs.statSync(downloadFilePath);
+              if (stats.size === fileSize) {
+                console.warn('Suppressed ERR_STREAM_PREMATURE_CLOSE: file is valid and complete.');
+                // Send a final 100% progress update to the client to indicate the download is complete
+                return;
+              } else {
+                console.error('File size mismatch after ERR_STREAM_PREMATURE_CLOSE:', stats.size, 'expected:', fileSize);
+              }
+            } catch (fsErr) {
+              console.error('File missing after ERR_STREAM_PREMATURE_CLOSE:', fsErr);
+            }
+          }
+          reject(err);
+        });
+      });
 
+      throttledOnProgress({
+        id,
+        shardIndex: numShards - 1,
+        progress: 100,
+        fileName,
+        fileSize,
+        speed: 0,
+        eta: 0,
+      });
+
+      // Only now notify the client and log the download
+      showNotification('Download Complete', fileName + ' has been downloaded.');
       await logDownload(id, url, fileSize, numShards, downloadFilePath, fileName);
+
+      // Ensure all streams are closed before deleting temp files
+      for (const stream of downloads[id].streams) {
+        if (stream && typeof stream.close === 'function') {
+          try { stream.close(); } catch (e) {}
+        } else if (stream && typeof stream.end === 'function') {
+          try { stream.end(); } catch (e) {}
+        }
+      }
 
       const tempDirectoryPath = path.join(__dirname, 'temp', id.toString());
       try {
-        await fs.promises.rm(tempDirectoryPath, { recursive: true });
+        await fs.promises.rm(tempDirectoryPath, { recursive: true, force: true });
       } catch (err) {
         console.error(`Failed to delete directory ${tempDirectoryPath}: ${err}`);
       }
@@ -285,15 +336,26 @@ async function downloadFile(url, onProgress, id, resume = false) {
     } else {
       console.log(`Download ${id} cancelled before writing final file`);
     }
-
-    await new Promise((resolve) => downloadFileStream.on('finish', () => {
-      console.log('Final file written');
-      showNotification('Donwload Complete', fileName + ' has been downloaded.');
-      resolve();
-    }));
-
   } catch (error) {
+    // Suppression for ERR_STREAM_PREMATURE_CLOSE
+    if (error && error.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+      // Check if the final file exists and matches expected size
+      const downloadFolderPath = config?.directoryPath || path.join(os.homedir(), 'Downloads');
+      const downloadFilePath = path.join(downloadFolderPath, fileName);
+      try {
+        const stats = fs.statSync(downloadFilePath);
+        if (stats.size === fileSize) {
+          console.warn('Suppressed ERR_STREAM_PREMATURE_CLOSE: file is valid and complete.');
+          return;
+        } else {
+          console.error('File size mismatch after ERR_STREAM_PREMATURE_CLOSE:', stats.size, 'expected:', fileSize);
+        }
+      } catch (fsErr) {
+        console.error('File missing after ERR_STREAM_PREMATURE_CLOSE:', fsErr);
+      }
+    }
     console.error('Failed to download file:', error);
+    // TODO: Send a red progress bar message ig?
   }
 }
 

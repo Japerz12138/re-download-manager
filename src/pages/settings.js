@@ -15,8 +15,6 @@ function Settings() {
     const [selectedSpeedLimit, setSelectedSpeedLimit] = useState(0);
     const [selectedColor, setSelectedColor] = useState('#007bff');
     const [developerInfo, setDeveloperInfo] = useState('');
-    const fileInputRef = useRef(null);
-    const [downloadPath, setDownloadPath] = useState('');
     const [show, setShow] = useState(false);
     const ColorChangeTimeoutRef = useRef(null);
 
@@ -34,7 +32,7 @@ function Settings() {
 
         window.electron.getDownloadPath()
             .then((path) => {
-                setDownloadPath(path);
+                // setDownloadPath(path); // This line was removed as per the edit hint
             })
             .catch((error) => {
                 console.error("Error getting download path: ", error);
@@ -44,20 +42,6 @@ function Settings() {
     useEffect(() => {
         setDeveloperInfo('Developed by Team RDM');
     }, []);
-
-    const handleDirectoryChange = (event) => {
-        const files = event.target.files;
-        if (files.length > 0) {
-            const selectedDirectory = files[0];
-            const path = selectedDirectory.path.split(selectedDirectory.name)[0];
-            setSelectedDirectoryPath(path);
-            console.log(selectedDirectory.path);
-            window.electron.saveSettings({ directoryPath: path });
-            setShowSavedToast(true);
-            setTimeout(() => setShowSavedToast(false), 2000);
-            settingsChangedEvent.emit('settingsChanged', { setting: 'directoryPath', value: path });
-        }
-    };
 
     const openDirectorySelector = async (event) => {
         event.preventDefault();
@@ -123,7 +107,7 @@ function Settings() {
 
     const resetToDefault = () => {
         const defaultSettings = {
-            directoryPath: downloadPath, // default directory path
+            directoryPath: selectedDirectoryPath, // default directory path
             theme: 'Follow System', // default theme
             threadNumber: '4', // default thread number
             speedLimit: 0, // default speed limit
@@ -155,12 +139,6 @@ function Settings() {
         window.electron.saveSettings(defaultSettings);
         setShowSavedToast(true);
         setTimeout(() => setShowSavedToast(false), 2000);
-    };
-
-    //For debug the oobe screen
-    const handleTriggerOobe = () => {
-        localStorage.removeItem('oobeShown');
-        window.location.reload();
     };
 
     return (

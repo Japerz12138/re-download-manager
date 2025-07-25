@@ -35,7 +35,7 @@ const useStartDownload = (url, isResumed, initialState, isPaused, currentDownloa
       isMounted = false;
       window.electron.offDownloadProgress(id);
     };
-  }, [url, isResumed, initialState, isPaused]);
+  }, [url, isResumed, initialState, isPaused, setDownloadInfo, handleDownloadProgress, currentDownload]);
 };
 
 const useHandleActions = (isPaused, currentDownload) => {
@@ -44,7 +44,7 @@ const useHandleActions = (isPaused, currentDownload) => {
     if (isPaused) {
       window.electron.pauseDownload(currentDownload.current.id);
     }
-  }, [isPaused]);
+  }, [isPaused, currentDownload]);
 };
 
 /**
