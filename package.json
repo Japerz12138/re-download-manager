@@ -94,7 +94,7 @@
           "arch": ["arm64"]
         }
       ],
-      "icon": "public/favicon.ico",
+      "icon": "public/logo512.png",
       "category": "public.app-category.utilities"
     },
     "dmg": {
