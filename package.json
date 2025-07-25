@@ -72,8 +72,10 @@
       "public/**/*",
       "src/**/*",
       "package.json",
-      "package-lock.json",
-      "electron.js"
-    ]
+      "package-lock.json"
+    ],
+    "extraMetadata": {
+      "main": "src/electron.js"
+    }
   }
 }
