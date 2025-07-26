@@ -10,6 +10,9 @@ const { Notification, app } = require('electron');
 let config;
 let downloads = {};
 
+// Add a global download tracking to prevent duplicates
+const activeDownloads = new Set();
+
 const defaultPath = path.join(os.homedir(), 'Downloads');
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
 const historyPath = path.join(app.getPath('userData'), 'history.json');
@@ -133,6 +136,16 @@ class ProgressStream extends stream.Transform {
 async function downloadFile(url, onProgress, id, resume = false) {
   const numShards = config.threadNumber || 4;
   console.log(`downloadFile called with id: ${id}`);
+  
+  // Check if download already exists to prevent duplicates
+  if (activeDownloads.has(id) && !resume) {
+    console.log(`Download ${id} already in progress, skipping duplicate`);
+    return;
+  }
+  
+  // Mark this download as active
+  activeDownloads.add(id);
+  
   let lastProgressUpdate = 0;
   const PROGRESS_UPDATE_INTERVAL = 500;
   const throttledOnProgress = (progressData) => {
@@ -143,6 +156,7 @@ async function downloadFile(url, onProgress, id, resume = false) {
       lastProgressUpdate = now;
     }
   };
+  
   try {
     console.log(`Starting download ${id}`);
     console.log(`Speed Limit:  ${config.speedLimit}`);
@@ -315,6 +329,10 @@ async function downloadFile(url, onProgress, id, resume = false) {
       showNotification('Download Complete', fileName + ' has been downloaded.');
       await logDownload(id, url, fileSize, numShards, downloadFilePath, fileName);
 
+      // Emit download completion event
+      const { ipcMain } = require('electron');
+      ipcMain.emit('download-complete', id);
+
       // Ensure all streams are closed before deleting temp files
       for (const stream of downloads[id].streams) {
         if (stream && typeof stream.close === 'function') {
@@ -333,19 +351,28 @@ async function downloadFile(url, onProgress, id, resume = false) {
 
       console.log(`Deleting download ${id} from downloads object`);
       delete downloads[id];
+      // Remove from active downloads
+      activeDownloads.delete(id);
     } else {
       console.log(`Download ${id} cancelled before writing final file`);
+      // Remove from active downloads
+      activeDownloads.delete(id);
     }
   } catch (error) {
     // Suppression for ERR_STREAM_PREMATURE_CLOSE
     if (error && error.code === 'ERR_STREAM_PREMATURE_CLOSE') {
       // Check if the final file exists and matches expected size
       const downloadFolderPath = config?.directoryPath || path.join(os.homedir(), 'Downloads');
-      const downloadFilePath = path.join(downloadFolderPath, fileName);
+      const downloadFilePath = path.join(downloadFolderPath, fileName || path.basename(url));
       try {
         const stats = fs.statSync(downloadFilePath);
         if (stats.size === fileSize) {
           console.warn('Suppressed ERR_STREAM_PREMATURE_CLOSE: file is valid and complete.');
+          // Emit download completion event
+          const { ipcMain } = require('electron');
+          ipcMain.emit('download-complete', id);
+          // Remove from active downloads
+          activeDownloads.delete(id);
           return;
         } else {
           console.error('File size mismatch after ERR_STREAM_PREMATURE_CLOSE:', stats.size, 'expected:', fileSize);
@@ -355,7 +382,13 @@ async function downloadFile(url, onProgress, id, resume = false) {
       }
     }
     console.error('Failed to download file:', error);
-    // TODO: Send a red progress bar message ig?
+    // Clean up downloads object if it exists
+    if (downloads[id]) {
+      console.log(`Cleaning up failed download ${id}`);
+      delete downloads[id];
+    }
+    // Remove from active downloads
+    activeDownloads.delete(id);
   }
 }
 

@@ -57,7 +57,7 @@ function formatETA(etaInSeconds) {
  * @param {string} props.eta - The estimated time of arrival for the download to complete.
  * @returns {JSX.Element} The rendered DownloadProgress component.
  */
-function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, speed, eta, cancelDownload, pauseDownload, isPaused, resumeDownload, isResumed }) {
+function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, speed, eta, cancelDownload, pauseDownload, isPaused, resumeDownload, isResumed, isCompleted, isProcessing }) {
 
   const [selectedDirectoryPath, setSelectedDirectoryPath] = useState('');
 
@@ -129,6 +129,14 @@ function DownloadProgress({ progress, fileName, fileSize, downloadFolderPath, sp
           {isPaused && !isDownloadResumed ? (
             <div className="progress" style={{ borderRadius: '68px' }}>
               <div className="progress-bar bg-warning" role="progressbar" style={{ width: '100%' }} aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">PAUSED</div>
+            </div>
+          ) : isProcessing ? (
+            <div className="progress" style={{ borderRadius: '68px' }}>
+              <div className="progress-bar bg-info progress-bar-striped progress-bar-animated" role="progressbar" style={{ width: '100%' }} aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">Combining files...</div>
+            </div>
+          ) : isCompleted ? (
+            <div className="progress" style={{ borderRadius: '68px' }}>
+              <div className="progress-bar bg-success" role="progressbar" style={{ width: '100%' }} aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">COMPLETED</div>
             </div>
           ) : (
             <div className="progress" style={{ borderRadius: '68px' }}>

@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DownloadProgress from './DownloadProgress';
 
-const useStartDownload = (url, isResumed, initialState, isPaused, currentDownload, setDownloadInfo, handleDownloadProgress) => {
+// Global state to track started downloads across component re-mounts
+const startedDownloads = new Set();
+
+const useStartDownload = (url, isResumed, initialState, isPaused, currentDownload, setDownloadInfo, handleDownloadProgress, removeUrl, downloadStartedRef, isCompleted, setIsCompleted, isProcessing, setIsProcessing) => {
   useEffect(() => {
     let id;
+    
     if (currentDownload.current.id === null && !isResumed) {
       id = initialState ? initialState.id : Date.now();
       console.log(`Generated id: ${id}`);
@@ -14,8 +18,11 @@ const useStartDownload = (url, isResumed, initialState, isPaused, currentDownloa
     console.log(`Generated id: ${id}`);
     currentDownload.current = { url, id };
     let isMounted = true;
+    
     handleDownloadProgress.current = (info) => {
       if (!isMounted || info.id !== id) return;
+      
+      // Update download info
       setDownloadInfo(prevDownloadInfo => ({
         ...prevDownloadInfo,
         shardProgress: prevDownloadInfo.shardProgress.map((progress, index) => index === info.shardIndex ? info.progress : progress),
@@ -26,16 +33,49 @@ const useStartDownload = (url, isResumed, initialState, isPaused, currentDownloa
         downloadFolderPath: info.downloadFolderPath,
       }));
     };
+
+    // Listen for download completion event
+    const handleDownloadComplete = (completedId) => {
+      if (completedId === id && !isCompleted) {
+        console.log(`Download ${id} actually completed, starting combining phase`);
+        setIsProcessing(true);
+        // After combining is done, show completion
+        setTimeout(() => {
+          console.log(`Download ${id} combining finished, marking as completed`);
+          setIsCompleted(true);
+          setIsProcessing(false);
+          // Remove the completed download after a short delay
+          setTimeout(() => {
+            console.log(`Removing completed download ${id} from list`);
+            startedDownloads.delete(id); // Clean up global state
+            removeUrl(url);
+          }, 2000); // 2 second delay to show completion
+        }, 5000); // 5 second delay for file combining
+      }
+    };
+
     window.electron.onDownloadProgress(id, handleDownloadProgress.current);
-    if (!isResumed && !(initialState && isPaused) && !isPaused) {
-      window.electron.startDownload(url, id, isPaused);
-      console.log(`Starting download with id: ${id}`);
+    window.electron.onDownloadComplete(id, handleDownloadComplete);
+    
+    if (!isResumed && !(initialState && isPaused) && !isPaused && !downloadStartedRef.current) {
+      // Check if this download is already started globally
+      if (!startedDownloads.has(id)) {
+        downloadStartedRef.current = true;
+        startedDownloads.add(id);
+        window.electron.startDownload(url, id, isPaused);
+        console.log(`Starting download with id: ${id}`);
+      } else {
+        console.log(`Download ${id} already started globally, not re-starting`);
+        downloadStartedRef.current = true; // Mark as started to prevent re-starting
+      }
     }
+    
     return () => {
       isMounted = false;
       window.electron.offDownloadProgress(id);
+      window.electron.offDownloadComplete(id);
     };
-  }, [url, isResumed, initialState, isPaused, setDownloadInfo, handleDownloadProgress, currentDownload]);
+  }, [url, isResumed, initialState, isPaused, setDownloadInfo, handleDownloadProgress, currentDownload, removeUrl, downloadStartedRef, isCompleted, setIsCompleted, isProcessing, setIsProcessing]);
 };
 
 const useHandleActions = (isPaused, currentDownload) => {
@@ -58,6 +98,9 @@ const useHandleActions = (isPaused, currentDownload) => {
  */
 function DownloadComponent({ url, removeUrl, initialState }) {
   const [numShards, setNumShards] = useState(8);
+  const downloadStartedRef = useRef(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     window.electron.getSettings().then((settings) => {
@@ -84,7 +127,7 @@ function DownloadComponent({ url, removeUrl, initialState }) {
   const handleDownloadProgress = useRef(null);
 
   //custom hook for this since this handles persistant states, apparently this is good practice
-  useStartDownload(url, isResumed, initialState, isPaused, currentDownload, setDownloadInfo, handleDownloadProgress);
+  useStartDownload(url, isResumed, initialState, isPaused, currentDownload, setDownloadInfo, handleDownloadProgress, removeUrl, downloadStartedRef, isCompleted, setIsCompleted, isProcessing, setIsProcessing);
   useHandleActions(isCancelled, isPaused, currentDownload);
 
   const cancelDownload = () => {
@@ -93,6 +136,7 @@ function DownloadComponent({ url, removeUrl, initialState }) {
       console.log(`Request to cancel download with id: ${currentDownload.current.id}`);
       window.electron.cancelDownload(currentDownload.current.id);
       console.log('Download cancelled');
+      startedDownloads.delete(currentDownload.current.id); // Clean up global state
       removeUrl(url);
     } else {
       console.error('No download to cancel');
@@ -134,6 +178,8 @@ function DownloadComponent({ url, removeUrl, initialState }) {
       resumeDownload={resumeDownload}
       isResumed={isResumed}
       isPaused={isPaused}
+      isCompleted={isCompleted}
+      isProcessing={isProcessing}
     />
   );
 }

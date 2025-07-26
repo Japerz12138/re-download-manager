@@ -139,6 +139,35 @@ contextBridge.exposeInMainWorld(
       }
     },
 
+    /**
+     * Registers a callback function to be called when a download is completed.
+     * @param {number} id - The unique identifier for the download.
+     * @param {function} callback - The callback function to be called when download is completed.
+     */
+    onDownloadComplete: (id, callback) => {
+      const listener = (event, completedId) => {
+        if (completedId === id) {
+          callback(completedId);
+        }
+      };
+      const listenerKey = `complete-${id}`;
+      listeners.set(listenerKey, listener);
+      ipcRenderer.on('download-complete', listener);
+    },
+
+    /**
+     * Unregisters the download completion listener for a specific download.
+     * @param {number} id - The unique identifier for the download.
+     */
+    offDownloadComplete: (id) => {
+      const listenerKey = `complete-${id}`;
+      const listener = listeners.get(listenerKey);
+      if (listener) {
+        ipcRenderer.removeListener('download-complete', listener);
+        listeners.delete(listenerKey);
+      }
+    },
+
     selectDirectory: async () => {
       return await ipcRenderer.invoke('select-directory');
     }
