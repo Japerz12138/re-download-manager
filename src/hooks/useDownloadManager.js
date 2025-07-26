@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { checkClipboard } from '../utils/urlUtils';
 
 export function useDownloadManager(setPausedDownloads) {
   useEffect(() => {

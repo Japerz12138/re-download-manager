@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter as Router, Route, Routes, useLocation, Outlet } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
 import Navbar from './Navbar';
 import Settings from './pages/settings';
@@ -23,8 +23,6 @@ function HomePage() {
     showClipboardToast, setShowClipboardToast, urlInputRef, theme, setTheme,
     pausedDownloads, setPausedDownloads
   } = useHomePageState();
-
-  const location = useLocation();
 
   // Use custom hooks for better organization
   useThemeManager(theme, setTheme);
